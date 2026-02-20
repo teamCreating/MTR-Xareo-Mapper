@@ -1,16 +1,16 @@
 package com.lx862.mtrsurveyor.util;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
 import org.mtr.core.data.TransportMode;
 import org.mtr.mod.Items;
 
 import java.util.Locale;
 
 public class MTRUtil {
-    public static Identifier dimensionToId(String dim) {
+    public static ResourceLocation dimensionToId(String dim) {
         // MTR uses / as the separator
-        return new Identifier(dim.replace("/", ":"));
+        return new ResourceLocation(dim.replace("/", ":"));
     }
 
     public static String getTransportModeName(TransportMode transportMode) {
@@ -20,7 +20,7 @@ public class MTRUtil {
 
     public static ItemStack getItemStackForTransportMode(TransportMode transportMode, boolean isDepot) {
         final ItemStack stack;
-        switch(transportMode) {
+        switch (transportMode) {
             case TRAIN -> {
                 stack = new ItemStack(Items.RAILWAY_DASHBOARD.get().data);
             }
@@ -35,7 +35,7 @@ public class MTRUtil {
             }
             default -> throw new IllegalArgumentException("Unknown transport mode " + transportMode);
         }
-        stack.getOrCreateNbt().putInt("CustomModelData", isDepot ? 101 : 100);
+        stack.getOrCreateTag().putInt("CustomModelData", isDepot ? 101 : 100);
         return stack;
     }
 }

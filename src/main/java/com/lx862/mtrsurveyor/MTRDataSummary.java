@@ -19,14 +19,15 @@ public class MTRDataSummary {
 
     private MTRDataSummary(Data dataInstance, List<MTRRoute> routes) {
         this.dataInstance = dataInstance;
-        for(Station station : new ArrayList<>(dataInstance.stations)) {
-            if(station.savedRails.isEmpty()) continue;
+        for (Station station : new ArrayList<>(dataInstance.stations)) {
+            if (station.savedRails.isEmpty())
+                continue;
 
             List<MTRRoute> routePassing = new ArrayList<>();
-            for(MTRRoute route : new ArrayList<>(routes)) {
-                for(MTRRoutePlatform routePlatformData : route.getRoutePlatforms()) {
-                    for(Platform platform : station.savedRails) {
-                        if(routePlatformData.getPlatformId() == platform.getId()) {
+            for (MTRRoute route : new ArrayList<>(routes)) {
+                for (MTRRoutePlatform routePlatformData : route.getRoutePlatforms()) {
+                    for (Platform platform : station.savedRails) {
+                        if (routePlatformData.getPlatformId() == platform.getId()) {
                             routePassing.add(route);
                         }
                     }
@@ -34,10 +35,12 @@ public class MTRDataSummary {
             }
 
             List<BasicRouteInfo> basicRouteInfos = new ArrayList<>();
-            for(MTRRoute route : routePassing) {
+            for (MTRRoute route : routePassing) {
                 BasicRouteInfo basicRouteInfo = BasicRouteInfo.of(route);
-                if(basicRouteInfos.contains(basicRouteInfo)) continue;
-                if(!MTRSurveyorConfig.INSTANCE.visibility.showHiddenRoute.value() && route.isHidden()) continue;
+                if (basicRouteInfos.contains(basicRouteInfo))
+                    continue;
+                if (!MTRSurveyorConfig.INSTANCE.showHiddenRoute.get() && route.isHidden())
+                    continue;
                 basicRouteInfos.add(basicRouteInfo);
             }
 
@@ -50,7 +53,9 @@ public class MTRDataSummary {
     }
 
     public static MTRDataSummary of(MinecraftClientData data) {
-        return new MTRDataSummary(data, data.simplifiedRouteIdMap.values().stream().map(MTRSimplifiedRouteImpl::new).collect(Collectors.toList()));
+        return new MTRDataSummary(data,
+                data.simplifiedRouteIdMap.values().stream().map(MTRSimplifiedRouteImpl::new)
+                        .collect(Collectors.toList()));
     }
 
     public Data getData() {

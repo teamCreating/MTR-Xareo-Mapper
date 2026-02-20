@@ -1,73 +1,76 @@
 package com.lx862.mtrsurveyor.config;
 
-import com.lx862.mtrsurveyor.MTRDataSummary;
 import com.lx862.mtrsurveyor.MTRSurveyor;
-import com.lx862.mtrsurveyor.landmark.MTRLandmarkManager;
-import com.lx862.mtrsurveyor.mixin.MTRAccessorMixin;
-import com.lx862.mtrsurveyor.mixin.MainAccessorMixin;
-import com.lx862.mtrsurveyor.util.MTRUtil;
-import folk.sisby.kaleido.api.ReflectiveConfig;
-import folk.sisby.kaleido.lib.quiltconfig.api.Config;
-import folk.sisby.kaleido.lib.quiltconfig.api.annotations.Comment;
-import folk.sisby.kaleido.lib.quiltconfig.api.annotations.Processor;
-import folk.sisby.kaleido.lib.quiltconfig.api.values.TrackedValue;
-import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.World;
-import org.mtr.core.Main;
-import org.mtr.core.simulation.Simulator;
+import net.minecraftforge.common.ForgeConfigSpec;
+import net.minecraftforge.fml.ModLoadingContext;
+import net.minecraftforge.fml.config.ModConfig;
 
-import java.nio.file.Path;
+public class MTRSurveyorConfig {
 
-@Processor("syncLandmarks")
-public class MTRSurveyorConfig extends ReflectiveConfig {
-    private static final Path configDirectory = FabricLoader.getInstance().getConfigDir();
-    public static final MTRSurveyorConfig INSTANCE = MTRSurveyorConfig.createToml(configDirectory, "", "mtrsurveyor", MTRSurveyorConfig.class);
+        public static final ForgeConfigSpec SPEC;
+        public static final MTRSurveyorConfig INSTANCE;
 
-    @Comment("Change the mod initialization log message to be something more formal... if that's not your thing :>")
-    public final TrackedValue<Boolean> formalInitLog = this.value(false);
+        // General
+        public final ForgeConfigSpec.BooleanValue formalInitLog;
+        public final ForgeConfigSpec.BooleanValue debugLog;
+        public final ForgeConfigSpec.BooleanValue enabled;
 
-    @Comment("Log all landmark sync events to the console.")
-    public final TrackedValue<Boolean> debugLog = this.value(false);
+        // Waypoint mode: "station" or "platform"
+        public final ForgeConfigSpec.ConfigValue<String> waypointMode;
 
-    @Comment("Whether landmarks should be automatically created & synced when an MTR-related change occurs.")
-    public final TrackedValue<Boolean> enabled = this.value(true);
+        // Visibility
+        public final ForgeConfigSpec.BooleanValue showStationLandmarks;
+        public final ForgeConfigSpec.BooleanValue showDepotLandmarks;
+        public final ForgeConfigSpec.BooleanValue showEmptyStation;
+        public final ForgeConfigSpec.BooleanValue showHiddenRoute;
 
-    @Comment("Configuration related to visibility of area landmarks")
-    public final Visibility visibility = new Visibility();
+        static {
+                ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
+                INSTANCE = new MTRSurveyorConfig(builder);
+                SPEC = builder.build();
+        }
 
-    public static class Visibility extends Section {
-        @Comment("Whether station landmarks should be added to the map.")
-        public final TrackedValue<Boolean> showStationLandmarks = this.value(true);
+        private MTRSurveyorConfig(ForgeConfigSpec.Builder builder) {
+                builder.comment("MTR Surveyor Configuration");
 
-        @Comment("Whether depot landmarks should be added to the map.")
-        public final TrackedValue<Boolean> showDepotLandmarks = this.value(false);
+                formalInitLog = builder
+                                .comment("Change the mod initialization log message to be something more formal")
+                                .define("formalInitLog", false);
 
-        @Comment("Whether empty stations (i.e. with no routes) should be added to the map.")
-        public final TrackedValue<Boolean> showEmptyStation = this.value(false);
+                debugLog = builder
+                                .comment("Log all landmark sync events to the console")
+                                .define("debugLog", false);
 
-        @Comment("Whether MTR route marked as hidden should be appended to the station description.")
-        public final TrackedValue<Boolean> showHiddenRoute = this.value(false);
-    }
+                enabled = builder
+                                .comment("Whether waypoints should be automatically created & synced when an MTR-related change occurs")
+                                .define("enabled", true);
 
-    // Static initialization
-    public static void init() {
-    }
+                waypointMode = builder
+                                .comment("Waypoint display mode: 'station' shows one waypoint per station, 'platform' shows one waypoint per platform with route info")
+                                .define("waypointMode", "station");
 
-    public void syncLandmarks(Config.Builder builder) {
-        builder.callback(newConfig -> {
-            MTRLandmarkManager.SyncOrigin syncOrigin = MTRLandmarkManager.SyncOrigin.ofServer("Config changed");
-            MinecraftServer mcServer = MTRSurveyor.getServerInstance();
-            if(mcServer != null && mcServer.isRunning()) {
-                Main main = MTRAccessorMixin.getMain();
-                for(Simulator simulator : ((MainAccessorMixin)main).getSimulators()) {
-                    World world = mcServer.getWorld(RegistryKey.of(RegistryKeys.WORLD, MTRUtil.dimensionToId(simulator.dimension)));
-                    MTRDataSummary mtrDataSummary = MTRDataSummary.of(simulator);
-                    MTRLandmarkManager.syncLandmarks(syncOrigin, world, mtrDataSummary, MTRSurveyorConfig.INSTANCE);
-                }
-            }
-        });
-    }
+                builder.push("visibility");
+
+                showStationLandmarks = builder
+                                .comment("Whether station waypoints should be added to the map")
+                                .define("showStationLandmarks", true);
+
+                showDepotLandmarks = builder
+                                .comment("Whether depot waypoints should be added to the map")
+                                .define("showDepotLandmarks", false);
+
+                showEmptyStation = builder
+                                .comment("Whether empty stations (with no routes) should be added to the map")
+                                .define("showEmptyStation", false);
+
+                showHiddenRoute = builder
+                                .comment("Whether MTR routes marked as hidden should be appended to the station description")
+                                .define("showHiddenRoute", false);
+
+                builder.pop();
+        }
+
+        public static void init() {
+                ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, SPEC, "mtrsurveyor.toml");
+        }
 }
