@@ -52,6 +52,11 @@ public class MTRSurveyor {
         serverInstance = event.getServer();
     }
 
+    @SubscribeEvent
+    public void onPlayerLoggedIn(net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent event) {
+        // Obsolete: Packet payload broadcasting removed
+    }
+
     /**
      * Register client-side commands. This fires on the client and works
      * even when connected to a remote server that doesn't have this mod.

@@ -143,92 +143,95 @@ public class XaeroIntegration {
             }
         }
 
-        /**
-         * Station mode: One waypoint per station.
-         * Name = station name, Symbol = first 2 chars of station name.
-         * Y = average platform Y (or station maxY if no platforms).
-         */
         private static boolean syncStationMode(MTRDataSummary data,
                 List<xaero.common.minimap.waypoints.Waypoint> existingWaypoints) {
             Set<String> addedNames = new HashSet<>();
             int stationCount = 0;
             int depotCount = 0;
-            int skippedCount = 0;
+
+            // Collect all existing MTR waypoint names so we don't duplicate them
+            for (xaero.common.minimap.waypoints.Waypoint wp : existingWaypoints) {
+                if (wp.getName() != null && wp.getName().startsWith(WAYPOINT_PREFIX)) {
+                    addedNames.add(wp.getName());
+                }
+            }
+
+            // We aggregate stations from BOTH the local streaming instance AND the
+            // dashboard instance (if the user opened it)
+            java.util.Set<org.mtr.core.data.Station> allStations = new java.util.HashSet<>();
+            java.util.Set<org.mtr.core.data.Depot> allDepots = new java.util.HashSet<>();
+
+            try {
+                org.mtr.mod.client.MinecraftClientData instance = org.mtr.mod.client.MinecraftClientData.getInstance();
+                if (instance != null) {
+                    allStations.addAll(instance.stations);
+                    allDepots.addAll(instance.depots);
+                }
+                org.mtr.mod.client.MinecraftClientData dashboard = org.mtr.mod.client.MinecraftClientData
+                        .getDashboardInstance();
+                if (dashboard != null) {
+                    allStations.addAll(dashboard.stations);
+                    allDepots.addAll(dashboard.depots);
+                }
+            } catch (Exception e) {
+                MTRSurveyor.LOGGER.error("[MTRSurveyor] Error accessing MTR datasets: ", e);
+            }
 
             // Add station waypoints
             if (MTRSurveyorConfig.INSTANCE.showStationLandmarks.get()) {
-                for (AreaBase<?, ?> area : new ArrayList<>(data.getData().stations)) {
-                    if (area instanceof Station station) {
-                        String name = station.getName();
-                        if (name == null || name.isEmpty())
-                            continue;
+                for (org.mtr.core.data.Station station : allStations) {
+                    String name = station.getName();
+                    if (name == null || name.isEmpty())
+                        continue;
 
-                        // Skip empty stations unless configured to show them
-                        List<MTRDataSummary.BasicRouteInfo> routes = data.getRoutesInStation(station);
-                        if (!MTRSurveyorConfig.INSTANCE.showEmptyStation.get()
-                                && (routes == null || routes.isEmpty())) {
-                            skippedCount++;
-                            continue;
-                        }
+                    String wpName = WAYPOINT_PREFIX + name;
+                    if (addedNames.contains(wpName))
+                        continue;
+                    addedNames.add(wpName);
 
-                        String wpName = WAYPOINT_PREFIX + name;
-                        if (addedNames.contains(wpName))
-                            continue;
-                        addedNames.add(wpName);
+                    // Use station center X/Z, but fix Y using platform positions
+                    org.mtr.core.data.Position center = station.getCenter();
+                    int x = (int) center.getX();
+                    int z = (int) center.getZ();
+                    int y = calculateStationY(station);
+                    String symbol = name;
 
-                        // Use station center X/Z, but fix Y using platform positions
-                        Position center = station.getCenter();
-                        int x = (int) center.getX();
-                        int z = (int) center.getZ();
-                        int y = calculateStationY(station);
-
-                        // Symbol: full station name (Xaero renders it on the icon)
-                        String symbol = name;
-
-                        xaero.common.minimap.waypoints.Waypoint waypoint = new xaero.common.minimap.waypoints.Waypoint(
-                                x, y, z, wpName, symbol, STATION_COLOR, 0, false);
-                        waypoint.setDisabled(false);
-                        existingWaypoints.add(waypoint);
-                        stationCount++;
-
-                        if (MTRSurveyorConfig.INSTANCE.debugLog.get()) {
-                            MTRSurveyor.LOGGER.info("[MTRSurveyor] Station waypoint: {} at ({}, {}, {})", name, x, y,
-                                    z);
-                        }
-                    }
+                    xaero.common.minimap.waypoints.Waypoint waypoint = new xaero.common.minimap.waypoints.Waypoint(
+                            x, y, z, wpName, symbol, STATION_COLOR, 3, false);
+                    waypoint.setDisabled(false);
+                    existingWaypoints.add(waypoint);
+                    stationCount++;
                 }
             }
 
             // Add depot waypoints
             if (MTRSurveyorConfig.INSTANCE.showDepotLandmarks.get()) {
-                for (AreaBase<?, ?> area : new ArrayList<>(data.getData().depots)) {
-                    if (area instanceof Depot depot) {
-                        String name = depot.getName();
-                        if (name == null || name.isEmpty())
-                            continue;
+                for (org.mtr.core.data.Depot depot : allDepots) {
+                    String name = depot.getName();
+                    if (name == null || name.isEmpty())
+                        continue;
 
-                        String wpName = WAYPOINT_PREFIX + "Depot: " + name;
-                        if (addedNames.contains(wpName))
-                            continue;
-                        addedNames.add(wpName);
+                    String wpName = WAYPOINT_PREFIX + "Depot: " + name;
+                    if (addedNames.contains(wpName))
+                        continue;
+                    addedNames.add(wpName);
 
-                        Position center = depot.getCenter();
-                        int x = (int) center.getX();
-                        int y = (int) depot.getMaxY(); // Use top of depot area
-                        int z = (int) center.getZ();
+                    org.mtr.core.data.Position center = depot.getCenter();
+                    int x = (int) center.getX();
+                    int y = (int) depot.getMaxY(); // Use top of depot area
+                    int z = (int) center.getZ();
 
-                        xaero.common.minimap.waypoints.Waypoint waypoint = new xaero.common.minimap.waypoints.Waypoint(
-                                x, y, z, wpName, "D", DEPOT_COLOR, 0, false);
-                        waypoint.setDisabled(false);
-                        existingWaypoints.add(waypoint);
-                        depotCount++;
-                    }
+                    xaero.common.minimap.waypoints.Waypoint waypoint = new xaero.common.minimap.waypoints.Waypoint(
+                            x, y, z, wpName, "D", DEPOT_COLOR, 3, false);
+                    waypoint.setDisabled(false);
+                    existingWaypoints.add(waypoint);
+                    depotCount++;
                 }
             }
 
             MTRSurveyor.LOGGER.info(
-                    "[MTRSurveyor] Station mode sync: {} stations, {} depots ({} skipped)",
-                    stationCount, depotCount, skippedCount);
+                    "[MTRSurveyor] Station mode sync: added {} new stations, {} new depots",
+                    stationCount, depotCount);
             return true;
         }
 
@@ -247,11 +250,39 @@ public class XaeroIntegration {
                 return true;
             }
 
+            Set<String> addedNames = new HashSet<>();
+            for (xaero.common.minimap.waypoints.Waypoint wp : existingWaypoints) {
+                if (wp.getName() != null && wp.getName().startsWith(WAYPOINT_PREFIX)) {
+                    addedNames.add(wp.getName());
+                }
+            }
+
+            // We aggregate stations from BOTH the local streaming instance AND the
+            // dashboard instance (if the user opened it)
+            java.util.Set<org.mtr.core.data.Station> allStations = new java.util.HashSet<>();
+            java.util.Set<org.mtr.core.data.Route> allRoutes = new java.util.HashSet<>();
+
+            try {
+                org.mtr.mod.client.MinecraftClientData instance = org.mtr.mod.client.MinecraftClientData.getInstance();
+                if (instance != null) {
+                    allStations.addAll(instance.stations);
+                    allRoutes.addAll(instance.routes);
+                }
+                org.mtr.mod.client.MinecraftClientData dashboard = org.mtr.mod.client.MinecraftClientData
+                        .getDashboardInstance();
+                if (dashboard != null) {
+                    allStations.addAll(dashboard.stations);
+                    allRoutes.addAll(dashboard.routes);
+                }
+            } catch (Exception e) {
+                MTRSurveyor.LOGGER.error("[MTRSurveyor] Error accessing MTR datasets: ", e);
+            }
+
             // Build a map of platformId -> list of routes, since platform.routes
             // is not populated on the client side
             Map<Long, List<Route>> platformRouteMap = new HashMap<>();
             try {
-                for (Route route : new ArrayList<>(data.getData().routes)) {
+                for (Route route : allRoutes) {
                     List<RoutePlatformData> rpList = route.getRoutePlatforms();
                     if (rpList == null)
                         continue;
@@ -266,9 +297,7 @@ public class XaeroIntegration {
                 MTRSurveyor.LOGGER.debug("[MTRSurveyor] Error building platform route map: {}", e.getMessage());
             }
 
-            for (AreaBase<?, ?> area : new ArrayList<>(data.getData().stations)) {
-                if (!(area instanceof Station station))
-                    continue;
+            for (org.mtr.core.data.Station station : allStations) {
                 String stationName = station.getName();
                 if (stationName == null || stationName.isEmpty())
                     continue;
@@ -323,9 +352,12 @@ public class XaeroIntegration {
                     }
 
                     String wpName = nameBuilder.toString();
+                    if (addedNames.contains(wpName))
+                        continue;
+                    addedNames.add(wpName);
 
                     xaero.common.minimap.waypoints.Waypoint waypoint = new xaero.common.minimap.waypoints.Waypoint(
-                            x, y, z, wpName, symbol, PLATFORM_COLOR, 0, false);
+                            x, y, z, wpName, symbol, PLATFORM_COLOR, 3, false);
                     waypoint.setDisabled(false);
                     existingWaypoints.add(waypoint);
                     platformCount++;
@@ -337,7 +369,7 @@ public class XaeroIntegration {
                 }
             }
 
-            MTRSurveyor.LOGGER.info("[MTRSurveyor] Platform mode sync: {} platforms", platformCount);
+            MTRSurveyor.LOGGER.info("[MTRSurveyor] Platform mode sync: added {} platforms", platformCount);
             return true;
         }
 
