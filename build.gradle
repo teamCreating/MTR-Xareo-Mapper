@@ -1,0 +1,131 @@
+plugins {
+    id 'net.minecraftforge.gradle' version '6.0.+'
+    id 'org.spongepowered.mixin' version '0.7-SNAPSHOT'
+    id 'maven-publish'
+}
+
+version = project.mod_version
+group = project.mod_group
+
+base {
+    archivesName = project.archives_base_name
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+minecraft {
+    mappings channel: project.mapping_channel, version: project.mapping_version
+
+    runs {
+        client {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
+            mods {
+                "${mod_id}" {
+                    source sourceSets.main
+                }
+            }
+        }
+        server {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
+            mods {
+                "${mod_id}" {
+                    source sourceSets.main
+                }
+            }
+        }
+    }
+}
+
+mixin {
+    add sourceSets.main, "${mod_id}.refmap.json"
+    config "${mod_id}.mixins.json"
+}
+
+ repositories {
+    mavenCentral()
+    maven { url = 'https://repo.spongepowered.org/repository/maven-public/' }
+    maven { url = 'https://oss.sonatype.org/content/repositories/snapshots/' }
+    maven { url = 'https://oss.sonatype.org/content/repositories/snapshots/' }
+    maven { url = 'https://jitpack.io' }
+    maven { url = "https://www.cursemaven.com" }
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = "Modrinth"
+                url = "https://api.modrinth.com/maven"
+            }
+        }
+        filter {
+            includeGroup "maven.modrinth"
+        }
+    }
+}
+
+dependencies {
+    minecraft "net.minecraftforge:forge:${project.minecraft_version}-${project.forge_version}"
+
+    // MTR (uses its own namespace, no deobfuscation needed)
+    implementation "maven.modrinth:minecraft-transit-railway:FORGE-${project.mtr_version}+${project.minecraft_version}"
+
+    // JourneyMap API (bundled in mod)
+    compileOnly fg.deobf("curse.maven:journeymap-32274:${project.journeymap_api_version}")
+
+    // Mixin
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+}
+
+processResources {
+    inputs.property "version", project.version
+    inputs.property "minecraft_version", project.minecraft_version
+    inputs.property "forge_version", project.forge_version
+    inputs.property "mod_id", project.mod_id
+    inputs.property "mod_name", project.mod_name
+    filteringCharset "UTF-8"
+
+    filesMatching("META-INF/mods.toml") {
+        expand "version": project.version,
+                "minecraft_version": project.minecraft_version,
+                "forge_version": project.forge_version,
+                "mod_id": project.mod_id,
+                "mod_name": project.mod_name
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.encoding = "UTF-8"
+    options.compilerArgs << "-proc:none"
+}
+
+jar {
+    manifest {
+        attributes([
+            "Specification-Title"     : project.mod_id,
+            "Specification-Version"   : "1",
+            "Implementation-Title"    : project.mod_name,
+            "Implementation-Version"  : project.jar.archiveVersion,
+            "MixinConfigs"            : "${project.mod_id}.mixins.json"
+        ])
+    }
+    from("LICENSE") {
+        rename { "${it}_${project.archives_base_name}" }
+    }
+    finalizedBy 'reobfJar'
+}
+
+publishing {
+    publications {
+        create("mavenJava", MavenPublication) {
+            artifactId = project.archives_base_name
+            from components.java
+        }
+    }
+    repositories {
+    }
+}

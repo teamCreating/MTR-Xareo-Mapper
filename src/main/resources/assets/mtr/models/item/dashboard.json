@@ -1,0 +1,11 @@
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "mtr:item/dashboard",
+    "layer1": "mtr:item/railway_dashboard"
+  },
+  "overrides": [
+    {"predicate": {"custom_model_data": 100}, "model": "mtr:item/station_train"},
+    {"predicate": {"custom_model_data": 101}, "model": "mtr:item/depot_train"}
+  ]
+}
