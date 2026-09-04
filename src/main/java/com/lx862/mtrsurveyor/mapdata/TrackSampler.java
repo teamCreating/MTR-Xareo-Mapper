@@ -43,7 +43,7 @@ public final class TrackSampler {
             for (int i = 0; i < sampleCount; i++) {
                 final double distance = Math.min(length, i * (length / (sampleCount - 1)));
                 final Vector pos = railMath.getPosition(distance, false);
-                points.add(new double[]{pos.x, pos.z});
+                points.add(new double[]{pos.x(), pos.z()});
             }
             return points;
         } catch (Throwable e) {

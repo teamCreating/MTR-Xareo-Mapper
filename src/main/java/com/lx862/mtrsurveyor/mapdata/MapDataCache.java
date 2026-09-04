@@ -8,7 +8,7 @@ import org.mtr.core.data.SimplifiedRoutePlatform;
 import org.mtr.core.data.Platform;
 import org.mtr.core.data.Route;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import org.mtr.mod.client.MinecraftClientData;
+import org.mtr.client.MinecraftClientData;
 
 import java.util.ArrayList;
 import java.util.HashMap;

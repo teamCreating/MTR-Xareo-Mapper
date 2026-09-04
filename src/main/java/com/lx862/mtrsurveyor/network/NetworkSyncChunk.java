@@ -4,7 +4,9 @@ import com.lx862.mtrsurveyor.mapdata.MapDataCache;
 import com.lx862.mtrsurveyor.mapdata.MapRoute;
 import com.lx862.mtrsurveyor.mapdata.MapTrack;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -12,48 +14,42 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
 
 /**
  * S2C: one chunk of a full-network map snapshot. The payload is a byte slice
  * of a self-describing binary dump; the last chunk triggers reassembly.
  */
-public class NetworkSyncChunk {
+public record NetworkSyncChunk(int transferId, short chunkIndex, short totalChunks, byte[] data)
+        implements CustomPacketPayload {
 
-    public int transferId;
-    public short chunkIndex;
-    public short totalChunks;
-    public byte[] data;
+    public static final Type<NetworkSyncChunk> TYPE =
+            new Type<>(MTRNetwork.id("network_sync_chunk"));
 
-    public NetworkSyncChunk() {
+    public static final StreamCodec<FriendlyByteBuf, NetworkSyncChunk> STREAM_CODEC =
+            StreamCodec.of(NetworkSyncChunk::write, NetworkSyncChunk::read);
+
+    @Override
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 
-    public NetworkSyncChunk(int transferId, short chunkIndex, short totalChunks, byte[] data) {
-        this.transferId = transferId;
-        this.chunkIndex = chunkIndex;
-        this.totalChunks = totalChunks;
-        this.data = data;
+    public static void write(FriendlyByteBuf buf, NetworkSyncChunk msg) {
+        buf.writeVarInt(msg.transferId());
+        buf.writeShort(msg.chunkIndex());
+        buf.writeShort(msg.totalChunks());
+        buf.writeByteArray(msg.data());
     }
 
-    public static void encode(NetworkSyncChunk msg, FriendlyByteBuf buf) {
-        buf.writeVarInt(msg.transferId);
-        buf.writeShort(msg.chunkIndex);
-        buf.writeShort(msg.totalChunks);
-        buf.writeByteArray(msg.data);
+    public static NetworkSyncChunk read(FriendlyByteBuf buf) {
+        final int transferId = buf.readVarInt();
+        final short chunkIndex = buf.readShort();
+        final short totalChunks = buf.readShort();
+        final byte[] data = buf.readByteArray();
+        return new NetworkSyncChunk(transferId, chunkIndex, totalChunks, data);
     }
 
-    public static NetworkSyncChunk decode(FriendlyByteBuf buf) {
-        final NetworkSyncChunk msg = new NetworkSyncChunk();
-        msg.transferId = buf.readVarInt();
-        msg.chunkIndex = buf.readShort();
-        msg.totalChunks = buf.readShort();
-        msg.data = buf.readByteArray();
-        return msg;
-    }
-
-    public static void handle(NetworkSyncChunk msg, Supplier<NetworkEvent.Context> ctx) {
-        ctx.get().enqueueWork(() -> ClientNetworkSync.onChunkReceived(msg));
-        ctx.get().setPacketHandled(true);
+    public static void handle(NetworkSyncChunk msg, IPayloadContext ctx) {
+        ctx.enqueueWork(() -> ClientNetworkSync.onChunkReceived(msg));
     }
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -63,14 +59,14 @@ public class NetworkSyncChunk {
     /**
      * Payload layout:
      * <pre>
-     * varint dimensionCount
+     * int dimensionCount
      * per dimension:
      *   UTF dimensionId
-     *   varint routeCount
-     *   per route: UTF name, int color, byte circular, varint stopCount,
+     *   int routeCount
+     *   per route: UTF name, int color, boolean circular, int stopCount,
      *              per stop: float x, float z, UTF stationName, UTF destination
-     *   varint trackCount
-     *   per track: varint pointCount, per point: float x, float z
+     *   int trackCount
+     *   per track: int pointCount, per point: float x, float z
      * </pre>
      */
     public static void writeDimensionList(DataOutputStream out,

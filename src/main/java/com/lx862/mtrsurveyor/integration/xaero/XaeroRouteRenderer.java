@@ -255,18 +255,18 @@ public class XaeroRouteRenderer {
         final double px = -dz / length * halfWidth;
         final double pz = dx / length * halfWidth;
 
-        consumer.vertex(matrix, (float) (x1 + px), (float) (z1 + pz), 0).color(r, g, b, a).endVertex();
-        consumer.vertex(matrix, (float) (x2 + px), (float) (z2 + pz), 0).color(r, g, b, a).endVertex();
-        consumer.vertex(matrix, (float) (x2 - px), (float) (z2 - pz), 0).color(r, g, b, a).endVertex();
-        consumer.vertex(matrix, (float) (x1 - px), (float) (z1 - pz), 0).color(r, g, b, a).endVertex();
+        consumer.addVertex(matrix, (float) (x1 + px), (float) (z1 + pz), 0).setColor(r, g, b, a);
+        consumer.addVertex(matrix, (float) (x2 + px), (float) (z2 + pz), 0).setColor(r, g, b, a);
+        consumer.addVertex(matrix, (float) (x2 - px), (float) (z2 - pz), 0).setColor(r, g, b, a);
+        consumer.addVertex(matrix, (float) (x1 - px), (float) (z1 - pz), 0).setColor(r, g, b, a);
     }
 
     private static void fillQuad(Matrix4f matrix, VertexConsumer consumer,
             double x1, double z1, double x2, double z2, int r, int g, int b, int a) {
-        consumer.vertex(matrix, (float) x1, (float) z1, 0).color(r, g, b, a).endVertex();
-        consumer.vertex(matrix, (float) x1, (float) z2, 0).color(r, g, b, a).endVertex();
-        consumer.vertex(matrix, (float) x2, (float) z2, 0).color(r, g, b, a).endVertex();
-        consumer.vertex(matrix, (float) x2, (float) z1, 0).color(r, g, b, a).endVertex();
+        consumer.addVertex(matrix, (float) x1, (float) z1, 0).setColor(r, g, b, a);
+        consumer.addVertex(matrix, (float) x1, (float) z2, 0).setColor(r, g, b, a);
+        consumer.addVertex(matrix, (float) x2, (float) z2, 0).setColor(r, g, b, a);
+        consumer.addVertex(matrix, (float) x2, (float) z1, 0).setColor(r, g, b, a);
     }
 
     private static boolean routeIntersects(MapRoute route, double minX, double minZ, double maxX, double maxZ) {

@@ -1,6 +1,6 @@
 # [CRTools] MTR:Xaero Mapper
 
-A Minecraft Forge 1.20.1 mod that displays [Minecraft Transit Railway (MTR)](https://github.com/Minecraft-Transit-Railway/Minecraft-Transit-Railway) networks on [Xaero's World Map](https://modrinth.com/mod/xaeros-world-map) - Create-train-map style - and syncs stations and depots as waypoints to [Xaero's Minimap](https://modrinth.com/mod/xaeros-minimap).
+A Minecraft NeoForge 1.21.1 mod that displays [Minecraft Transit Railway (MTR)](https://github.com/Minecraft-Transit-Railway/Minecraft-Transit-Railway) networks on [Xaero's World Map](https://modrinth.com/mod/xaeros-world-map) - Create-train-map style - and syncs stations and depots as waypoints to [Xaero's Minimap](https://modrinth.com/mod/xaeros-minimap).
 
 ## Features
 
@@ -26,7 +26,8 @@ A Minecraft Forge 1.20.1 mod that displays [Minecraft Transit Railway (MTR)](htt
 
 | Mod | Required |
 |-----|----------|
-| Minecraft Forge 1.20.1 | ✅ |
+| Minecraft 1.21.1 | ✅ |
+| NeoForge 21.1.x | ✅ |
 | Minecraft Transit Railway 4.x | ✅ |
 | Xaero's Minimap | ⚠️ Optional (enables waypoint sync) |
 | Xaero's World Map | ⚠️ Optional (recommended, enables the path layer; 1.40.11+) |

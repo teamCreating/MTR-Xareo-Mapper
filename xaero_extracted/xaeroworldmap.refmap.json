@@ -1,0 +1,68 @@
+{
+  "mappings": {
+    "xaero/map/mixin/MixinClientPlayNetworkHandler": {
+      "Lnet/minecraft/network/protocol/PacketUtils;ensureRunningOnSameThread(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketListener;Lnet/minecraft/util/thread/BlockableEventLoop;)V": "Lnet/minecraft/network/protocol/PacketUtils;m_131363_(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketListener;Lnet/minecraft/util/thread/BlockableEventLoop;)V",
+      "handleSetSpawn": "Lnet/minecraft/client/multiplayer/ClientPacketListener;m_6571_(Lnet/minecraft/network/protocol/game/ClientboundSetDefaultSpawnPositionPacket;)V",
+      "updateLevelChunk": "Lnet/minecraft/client/multiplayer/ClientPacketListener;m_194198_(IILnet/minecraft/network/protocol/game/ClientboundLevelChunkPacketData;)V",
+      "handleLevelChunkWithLight": "Lnet/minecraft/client/multiplayer/ClientPacketListener;m_183388_(Lnet/minecraft/network/protocol/game/ClientboundLevelChunkWithLightPacket;)V",
+      "queueLightRemoval": "Lnet/minecraft/client/multiplayer/ClientPacketListener;m_194252_(Lnet/minecraft/network/protocol/game/ClientboundForgetLevelChunkPacket;)V",
+      "handleLightUpdatePacket": "Lnet/minecraft/client/multiplayer/ClientPacketListener;m_183514_(Lnet/minecraft/network/protocol/game/ClientboundLightUpdatePacket;)V",
+      "handleChunkBlocksUpdate": "Lnet/minecraft/client/multiplayer/ClientPacketListener;m_5771_(Lnet/minecraft/network/protocol/game/ClientboundSectionBlocksUpdatePacket;)V",
+      "close": "Lnet/minecraft/client/multiplayer/ClientPacketListener;m_261044_()V",
+      "handleBlockUpdate": "Lnet/minecraft/client/multiplayer/ClientPacketListener;m_6773_(Lnet/minecraft/network/protocol/game/ClientboundBlockUpdatePacket;)V"
+    },
+    "xaero/map/mixin/MixinForgeClientPacketListener": {
+      "Lnet/minecraft/network/protocol/PacketUtils;ensureRunningOnSameThread(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketListener;Lnet/minecraft/util/thread/BlockableEventLoop;)V": "Lnet/minecraft/network/protocol/PacketUtils;m_131363_(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketListener;Lnet/minecraft/util/thread/BlockableEventLoop;)V",
+      "handleLogin": "Lnet/minecraft/client/multiplayer/ClientPacketListener;m_5998_(Lnet/minecraft/network/protocol/game/ClientboundLoginPacket;)V"
+    },
+    "xaero/map/mixin/MixinForgeMinecraftClient": {
+      "Lnet/minecraft/client/renderer/GameRenderer;render(FJZ)V": "Lnet/minecraft/client/renderer/GameRenderer;m_109093_(FJZ)V",
+      "runTick": "Lnet/minecraft/client/Minecraft;m_91383_(Z)V"
+    },
+    "xaero/map/mixin/MixinPlayerList": {
+      "sendLevelInfo": "Lnet/minecraft/server/players/PlayerList;m_11229_(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/server/level/ServerLevel;)V"
+    },
+    "xaero/map/mixin/MixinLevelStorageAccess": {
+      "deleteLevel": "Lnet/minecraft/world/level/storage/LevelStorageSource$LevelStorageAccess;m_78311_()V"
+    },
+    "xaero/map/mixin/MixinChatListener": {
+      "handleSystemMessage": "Lnet/minecraft/client/multiplayer/chat/ChatListener;m_240494_(Lnet/minecraft/network/chat/Component;Z)V",
+      "Lnet/minecraft/client/gui/components/ChatComponent;addMessage(Lnet/minecraft/network/chat/Component;)V": "Lnet/minecraft/client/gui/components/ChatComponent;m_93785_(Lnet/minecraft/network/chat/Component;)V",
+      "handleDisguisedChatMessage": "Lnet/minecraft/client/multiplayer/chat/ChatListener;m_245141_(Lnet/minecraft/network/chat/Component;Lnet/minecraft/network/chat/ChatType$Bound;)V"
+    }
+  },
+  "data": {
+    "searge": {
+      "xaero/map/mixin/MixinClientPlayNetworkHandler": {
+        "Lnet/minecraft/network/protocol/PacketUtils;ensureRunningOnSameThread(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketListener;Lnet/minecraft/util/thread/BlockableEventLoop;)V": "Lnet/minecraft/network/protocol/PacketUtils;m_131363_(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketListener;Lnet/minecraft/util/thread/BlockableEventLoop;)V",
+        "handleSetSpawn": "Lnet/minecraft/client/multiplayer/ClientPacketListener;m_6571_(Lnet/minecraft/network/protocol/game/ClientboundSetDefaultSpawnPositionPacket;)V",
+        "updateLevelChunk": "Lnet/minecraft/client/multiplayer/ClientPacketListener;m_194198_(IILnet/minecraft/network/protocol/game/ClientboundLevelChunkPacketData;)V",
+        "handleLevelChunkWithLight": "Lnet/minecraft/client/multiplayer/ClientPacketListener;m_183388_(Lnet/minecraft/network/protocol/game/ClientboundLevelChunkWithLightPacket;)V",
+        "queueLightRemoval": "Lnet/minecraft/client/multiplayer/ClientPacketListener;m_194252_(Lnet/minecraft/network/protocol/game/ClientboundForgetLevelChunkPacket;)V",
+        "handleLightUpdatePacket": "Lnet/minecraft/client/multiplayer/ClientPacketListener;m_183514_(Lnet/minecraft/network/protocol/game/ClientboundLightUpdatePacket;)V",
+        "handleChunkBlocksUpdate": "Lnet/minecraft/client/multiplayer/ClientPacketListener;m_5771_(Lnet/minecraft/network/protocol/game/ClientboundSectionBlocksUpdatePacket;)V",
+        "close": "Lnet/minecraft/client/multiplayer/ClientPacketListener;m_261044_()V",
+        "handleBlockUpdate": "Lnet/minecraft/client/multiplayer/ClientPacketListener;m_6773_(Lnet/minecraft/network/protocol/game/ClientboundBlockUpdatePacket;)V"
+      },
+      "xaero/map/mixin/MixinForgeClientPacketListener": {
+        "Lnet/minecraft/network/protocol/PacketUtils;ensureRunningOnSameThread(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketListener;Lnet/minecraft/util/thread/BlockableEventLoop;)V": "Lnet/minecraft/network/protocol/PacketUtils;m_131363_(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketListener;Lnet/minecraft/util/thread/BlockableEventLoop;)V",
+        "handleLogin": "Lnet/minecraft/client/multiplayer/ClientPacketListener;m_5998_(Lnet/minecraft/network/protocol/game/ClientboundLoginPacket;)V"
+      },
+      "xaero/map/mixin/MixinForgeMinecraftClient": {
+        "Lnet/minecraft/client/renderer/GameRenderer;render(FJZ)V": "Lnet/minecraft/client/renderer/GameRenderer;m_109093_(FJZ)V",
+        "runTick": "Lnet/minecraft/client/Minecraft;m_91383_(Z)V"
+      },
+      "xaero/map/mixin/MixinPlayerList": {
+        "sendLevelInfo": "Lnet/minecraft/server/players/PlayerList;m_11229_(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/server/level/ServerLevel;)V"
+      },
+      "xaero/map/mixin/MixinLevelStorageAccess": {
+        "deleteLevel": "Lnet/minecraft/world/level/storage/LevelStorageSource$LevelStorageAccess;m_78311_()V"
+      },
+      "xaero/map/mixin/MixinChatListener": {
+        "handleSystemMessage": "Lnet/minecraft/client/multiplayer/chat/ChatListener;m_240494_(Lnet/minecraft/network/chat/Component;Z)V",
+        "Lnet/minecraft/client/gui/components/ChatComponent;addMessage(Lnet/minecraft/network/chat/Component;)V": "Lnet/minecraft/client/gui/components/ChatComponent;m_93785_(Lnet/minecraft/network/chat/Component;)V",
+        "handleDisguisedChatMessage": "Lnet/minecraft/client/multiplayer/chat/ChatListener;m_245141_(Lnet/minecraft/network/chat/Component;Lnet/minecraft/network/chat/ChatType$Bound;)V"
+      }
+    }
+  }
+}

@@ -1,0 +1,50 @@
+modLoader = "javafml"
+loaderVersion = "[4,)"
+license = "MIT"
+issueTrackerURL = "https://github.com/BenLi06/mtrsurveyor/issues"
+
+[[mods]]
+modId = "mtrsurveyor"
+version = "${version}"
+displayName = "[CRTools]MTR:Xaero Mapper"
+description = '''Displays MTR route lines and track geometry on Xaero's World Map and syncs MTR stations, platforms & depots as waypoints to Xaero's Minimap. Supports optional full-network sync when installed on the server.'''
+logoFile = "assets/mtrsurveyor/icon.png"
+authors = "BenLi06"
+
+[[dependencies.mtrsurveyor]]
+modId = "neoforge"
+type = "required"
+versionRange = "[21.1,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.mtrsurveyor]]
+modId = "minecraft"
+type = "required"
+versionRange = "[1.21.1,1.21.2)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.mtrsurveyor]]
+modId = "mtr"
+type = "required"
+versionRange = "[${mtr_version},)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.mtrsurveyor]]
+modId = "xaerominimap"
+type = "optional"
+versionRange = "*"
+ordering = "AFTER"
+side = "CLIENT"
+
+[[dependencies.mtrsurveyor]]
+modId = "xaeroworldmap"
+type = "optional"
+versionRange = "[1.45.0,)"
+ordering = "AFTER"
+side = "CLIENT"
+
+[[mixins]]
+config = "mtrsurveyor.mixins.json"

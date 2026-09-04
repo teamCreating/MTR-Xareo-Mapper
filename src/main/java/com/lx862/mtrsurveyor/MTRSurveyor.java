@@ -3,15 +3,15 @@ package com.lx862.mtrsurveyor;
 import com.lx862.mtrsurveyor.config.MTRSurveyorConfig;
 import com.lx862.mtrsurveyor.integration.XaeroIntegration;
 import com.lx862.mtrsurveyor.network.MTRNetwork;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.client.event.RegisterClientCommandsEvent;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.event.server.ServerStartingEvent;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.minecraft.server.MinecraftServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,21 +24,18 @@ public class MTRSurveyor {
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_NAME);
     private static MinecraftServer serverInstance = null;
 
-    public MTRSurveyor() {
-        MTRSurveyorConfig.init();
+    public MTRSurveyor(IEventBus modEventBus, ModContainer modContainer) {
+        MTRSurveyorConfig.register(modContainer);
 
-        // Register the setup method for modloading
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
+        // Mod-bus events
+        modEventBus.addListener(this::setup);
+        modEventBus.addListener(MTRNetwork::register);
 
-        // Register ourselves for server and other game events
-        MinecraftForge.EVENT_BUS.register(this);
+        // Game-bus events
+        NeoForge.EVENT_BUS.register(this);
     }
 
     private void setup(final FMLCommonSetupEvent event) {
-        // Register the full-network sync channel (used when this mod is also on
-        // the server; harmless when not).
-        event.enqueueWork(MTRNetwork::register);
-
         if (MTRSurveyorConfig.INSTANCE.formalInitLog.get()) {
             LOGGER.info("[{}] Mod loaded!", MOD_NAME);
         } else {
@@ -52,16 +49,6 @@ public class MTRSurveyor {
         }
     }
 
-    @SubscribeEvent
-    public void onServerStarting(ServerStartingEvent event) {
-        serverInstance = event.getServer();
-    }
-
-    @SubscribeEvent
-    public void onPlayerLoggedIn(net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent event) {
-        // Obsolete: Packet payload broadcasting removed
-    }
-
     /**
      * Register client-side commands. This fires on the client and works
      * even when connected to a remote server that doesn't have this mod.
@@ -72,21 +59,14 @@ public class MTRSurveyor {
     }
 
     @SubscribeEvent
-    public void onClientTick(TickEvent.ClientTickEvent event) {
-        if (event.phase != TickEvent.Phase.END)
-            return;
+    public void onClientTick(ClientTickEvent.Post event) {
         if (!XaeroIntegration.isXaeroLoaded())
             return;
 
         XaeroIntegration.onClientTick();
-        // ClientNetworkSync ticks itself via its own @SubscribeEvent handlers.
     }
 
     public static MinecraftServer getServerInstance() {
         return serverInstance;
-    }
-
-    public static ResourceLocation id(String path) {
-        return new ResourceLocation(MOD_ID, path);
     }
 }

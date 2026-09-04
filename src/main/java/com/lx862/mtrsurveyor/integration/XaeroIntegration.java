@@ -3,7 +3,7 @@ package com.lx862.mtrsurveyor.integration;
 import com.lx862.mtrsurveyor.MTRDataSummary;
 import com.lx862.mtrsurveyor.MTRSurveyor;
 import com.lx862.mtrsurveyor.config.MTRSurveyorConfig;
-import net.minecraftforge.fml.ModList;
+import net.neoforged.fml.ModList;
 import org.mtr.core.data.AreaBase;
 import org.mtr.core.data.Depot;
 import org.mtr.core.data.Platform;
@@ -11,7 +11,7 @@ import org.mtr.core.data.Position;
 import org.mtr.core.data.Route;
 import org.mtr.core.data.RoutePlatformData;
 import org.mtr.core.data.Station;
-import org.mtr.mod.client.MinecraftClientData;
+import org.mtr.client.MinecraftClientData;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -162,12 +162,12 @@ public class XaeroIntegration {
             java.util.Set<org.mtr.core.data.Depot> allDepots = new java.util.HashSet<>();
 
             try {
-                org.mtr.mod.client.MinecraftClientData instance = org.mtr.mod.client.MinecraftClientData.getInstance();
+                org.mtr.client.MinecraftClientData instance = org.mtr.client.MinecraftClientData.getInstance();
                 if (instance != null) {
                     allStations.addAll(instance.stations);
                     allDepots.addAll(instance.depots);
                 }
-                org.mtr.mod.client.MinecraftClientData dashboard = org.mtr.mod.client.MinecraftClientData
+                org.mtr.client.MinecraftClientData dashboard = org.mtr.client.MinecraftClientData
                         .getDashboardInstance();
                 if (dashboard != null) {
                     allStations.addAll(dashboard.stations);
@@ -263,12 +263,12 @@ public class XaeroIntegration {
             java.util.Set<org.mtr.core.data.Route> allRoutes = new java.util.HashSet<>();
 
             try {
-                org.mtr.mod.client.MinecraftClientData instance = org.mtr.mod.client.MinecraftClientData.getInstance();
+                org.mtr.client.MinecraftClientData instance = org.mtr.client.MinecraftClientData.getInstance();
                 if (instance != null) {
                     allStations.addAll(instance.stations);
                     allRoutes.addAll(instance.routes);
                 }
-                org.mtr.mod.client.MinecraftClientData dashboard = org.mtr.mod.client.MinecraftClientData
+                org.mtr.client.MinecraftClientData dashboard = org.mtr.client.MinecraftClientData
                         .getDashboardInstance();
                 if (dashboard != null) {
                     allStations.addAll(dashboard.stations);

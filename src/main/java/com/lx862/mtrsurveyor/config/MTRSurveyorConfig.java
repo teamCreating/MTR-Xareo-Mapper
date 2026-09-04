@@ -1,44 +1,43 @@
 package com.lx862.mtrsurveyor.config;
 
-import com.lx862.mtrsurveyor.MTRSurveyor;
-import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.fml.ModLoadingContext;
-import net.minecraftforge.fml.config.ModConfig;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.config.ModConfig;
+import net.neoforged.neoforge.common.ModConfigSpec;
 
 public class MTRSurveyorConfig {
 
-        public static final ForgeConfigSpec SPEC;
+        public static final ModConfigSpec SPEC;
         public static final MTRSurveyorConfig INSTANCE;
 
         // General
-        public final ForgeConfigSpec.BooleanValue formalInitLog;
-        public final ForgeConfigSpec.BooleanValue debugLog;
-        public final ForgeConfigSpec.BooleanValue enabled;
+        public final ModConfigSpec.BooleanValue formalInitLog;
+        public final ModConfigSpec.BooleanValue debugLog;
+        public final ModConfigSpec.BooleanValue enabled;
 
         // Waypoint mode: "station" or "platform"
-        public final ForgeConfigSpec.ConfigValue<String> waypointMode;
+        public final ModConfigSpec.ConfigValue<String> waypointMode;
 
         // World map path layers
-        public final ForgeConfigSpec.BooleanValue routeLinesEnabled;
-        public final ForgeConfigSpec.BooleanValue trackLinesEnabled;
+        public final ModConfigSpec.BooleanValue routeLinesEnabled;
+        public final ModConfigSpec.BooleanValue trackLinesEnabled;
 
         // Full-network sync (requires the mod on the server)
-        public final ForgeConfigSpec.BooleanValue networkSyncEnabled;
-        public final ForgeConfigSpec.IntValue networkSyncIntervalSeconds;
+        public final ModConfigSpec.BooleanValue networkSyncEnabled;
+        public final ModConfigSpec.IntValue networkSyncIntervalSeconds;
 
         // Visibility
-        public final ForgeConfigSpec.BooleanValue showStationLandmarks;
-        public final ForgeConfigSpec.BooleanValue showDepotLandmarks;
-        public final ForgeConfigSpec.BooleanValue showEmptyStation;
-        public final ForgeConfigSpec.BooleanValue showHiddenRoute;
+        public final ModConfigSpec.BooleanValue showStationLandmarks;
+        public final ModConfigSpec.BooleanValue showDepotLandmarks;
+        public final ModConfigSpec.BooleanValue showEmptyStation;
+        public final ModConfigSpec.BooleanValue showHiddenRoute;
 
         static {
-                ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
+                ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
                 INSTANCE = new MTRSurveyorConfig(builder);
                 SPEC = builder.build();
         }
 
-        private MTRSurveyorConfig(ForgeConfigSpec.Builder builder) {
+        private MTRSurveyorConfig(ModConfigSpec.Builder builder) {
                 builder.comment("MTR Surveyor Configuration");
 
                 formalInitLog = builder
@@ -94,7 +93,7 @@ public class MTRSurveyorConfig {
                 builder.pop();
         }
 
-        public static void init() {
-                ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, SPEC, "mtrsurveyor.toml");
+        public static void register(ModContainer modContainer) {
+                modContainer.registerConfig(ModConfig.Type.COMMON, SPEC, "mtrsurveyor.toml");
         }
 }

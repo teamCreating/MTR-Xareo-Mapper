@@ -4,7 +4,7 @@ import com.lx862.mtrsurveyor.MTRSurveyor;
 import com.lx862.mtrsurveyor.config.MTRSurveyorConfig;
 import com.lx862.mtrsurveyor.integration.XaeroIntegration;
 import com.lx862.mtrsurveyor.mapdata.MapDataCache;
-import org.mtr.mod.client.MinecraftClientData;
+import org.mtr.client.MinecraftClientData;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;

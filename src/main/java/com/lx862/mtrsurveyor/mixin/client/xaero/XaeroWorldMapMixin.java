@@ -15,14 +15,17 @@ import xaero.map.gui.GuiMap;
  * Mixin into Xaero's World Map render method to draw the MTR path layer
  * (route lines & track geometry) on the map.
  * Modelled after Create mod's XaeroFullscreenMapMixin.
+ *
+ * <p>On NeoForge the runtime uses Mojang mappings, so both GuiMap.render and
+ * GuiGraphics.blit are referenced by their mapped names.</p>
  */
-@Mixin(value = GuiMap.class)
+@Mixin(value = GuiMap.class, remap = false)
 public abstract class XaeroWorldMapMixin {
 
     @Unique
     private boolean mtrsurveyor$failedToRender = false;
 
-    @Inject(method = "m_88315_(Lnet/minecraft/client/gui/GuiGraphics;IIF)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;m_280218_(Lnet/minecraft/resources/ResourceLocation;IIIIII)V"), remap = false, require = 0)
+    @Inject(method = "render(Lnet/minecraft/client/gui/GuiGraphics;IIF)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blit(Lnet/minecraft/resources/ResourceLocation;IIIIII)V"), remap = false, require = 0)
     public void mtrsurveyor$onRenderTail(GuiGraphics graphics, int mouseX, int mouseY, float partialTick,
             CallbackInfo ci) {
         try {
@@ -36,7 +39,7 @@ public abstract class XaeroWorldMapMixin {
         }
     }
 
-    @Inject(method = "m_6375_(DDI)Z", at = @At("HEAD"), remap = false, cancellable = true, require = 0)
+    @Inject(method = "mouseClicked(DDI)Z", at = @At("HEAD"), remap = false, cancellable = true, require = 0)
     public void mtrsurveyor$onMouseClicked(double mouseX, double mouseY, int button,
             CallbackInfoReturnable<Boolean> cir) {
         try {

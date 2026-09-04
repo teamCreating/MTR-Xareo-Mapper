@@ -1,3 +1,23 @@
+# v1.2.0 Release Notes (2026-09-05)
+
+## 平台迁移: Forge 1.20.1 → NeoForge 1.21.1
+
+- 目标平台变更为 **NeoForge 1.21.1**(NeoForge 21.1.249),依赖 **MTR 4.1.0-beta.2**(NEOFORGE-4.1.0-beta.2+1.21.1)、Xaero's World Map 1.45.0+、Xaero's Minimap 26.4.2+。
+- 构建系统由 ForgeGradle 6 迁移为 **ModDevGradle 2.0.146**;NeoForge 运行时即 Mojang 官方映射,mixin 不再需要 refmap/SRG 名。
+- MTR 4.1 的包名迁移已适配:`org.mtr.mod.client.MinecraftClientData` → `org.mtr.client.MinecraftClientData`、`org.mtr.mod.Init` → `org.mtr.MTR`;mtr-core 数据层(Station/Platform/SimplifiedRoute/Rail/RailMath/Simulator)保持兼容。
+- 网络层从 Forge `SimpleChannel` 重写为 NeoForge `CustomPacketPayload` + `PayloadRegistrar`,两侧均以 `optional()` 注册,并对非 NeoForge 连接做了类型探测,在不支持的服务器上自动回退纯客户端模式。
+- 1.21.1 渲染 API 适配:`VertexConsumer.addVertex()/setColor()`、`ResourceLocation.fromNamespaceAndPath`、pack_format 34。
+- 新增 `/mtrsurveyor syncRoutes` 命令与 `networkSync.enabled` / `networkSync.refreshIntervalSeconds` 配置(全网快照同步)。
+
+## 实机自测记录 (runClient + MTR/Xaero 实装环境)
+
+- mtrsurveyor 1.2.0 加载成功;Xaero 双图检测、`XaeroWorldMapMixin`/`XaeroWorldMapAccessor` 成功应用到 `GuiMap`。
+- 打开世界地图后渲染钩子日志 `Path layer render hook into Xaero's World Map is active` 出现,ROUTES/TRACKS 开关在地图左上角正常渲染。
+- 单机进入世界后全网同步全链路自动完成:`Requested → Sent full-network snapshot for minecraft/overworld|the_nether|the_end → Full-network snapshot applied`,分块传输与客户端缓存工作正常。
+- 会话期间无 mod 相关报错。
+
+---
+
 # v1.0.1 Release Notes(2026-09-05)
 
 ## 下载说明

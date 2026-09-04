@@ -2,39 +2,33 @@ package com.lx862.mtrsurveyor.network;
 
 import com.lx862.mtrsurveyor.MTRSurveyor;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.network.NetworkDirection;
-import net.minecraftforge.network.NetworkRegistry;
-import net.minecraftforge.network.simple.SimpleChannel;
-
-import java.util.Optional;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
 /**
- * Forge network channel for the full-network map sync (Plan C).
+ * NeoForge payload registration for the full-network map sync (Plan C).
  *
  * <p>When this mod is installed on the server, clients can request a snapshot
  * of the whole MTR network (routes + sampled track geometry) per dimension -
  * the same data model Create's train map uses. The snapshot is transferred in
  * chunks so arbitrarily large networks stay within packet size limits.</p>
+ *
+ * <p>Both payloads are registered as {@code optional()}, so connecting to a
+ * NeoForge server without this mod never disconnects the client; presence is
+ * probed empirically by {@link ClientNetworkSync}.</p>
  */
 public class MTRNetwork {
 
     private static final String PROTOCOL_VERSION = "1";
-    private static int messageId = 0;
 
-    public static SimpleChannel CHANNEL;
+    public static void register(RegisterPayloadHandlersEvent event) {
+        final PayloadRegistrar registrar = event.registrar(PROTOCOL_VERSION).optional();
+        registrar.playToServer(RequestNetworkSync.TYPE, RequestNetworkSync.STREAM_CODEC, RequestNetworkSync::handle);
+        registrar.playToClient(NetworkSyncChunk.TYPE, NetworkSyncChunk.STREAM_CODEC, NetworkSyncChunk::handle);
+        MTRSurveyor.LOGGER.info("[MTRSurveyor] Full-network sync payloads registered (protocol {})", PROTOCOL_VERSION);
+    }
 
-    public static void register() {
-        CHANNEL = NetworkRegistry.newSimpleChannel(
-                new ResourceLocation(MTRSurveyor.MOD_ID, "main"),
-                () -> PROTOCOL_VERSION,
-                PROTOCOL_VERSION::equals,
-                PROTOCOL_VERSION::equals);
-
-        CHANNEL.registerMessage(messageId++, RequestNetworkSync.class,
-                RequestNetworkSync::encode, RequestNetworkSync::decode, RequestNetworkSync::handle,
-                Optional.of(NetworkDirection.PLAY_TO_SERVER));
-        CHANNEL.registerMessage(messageId++, NetworkSyncChunk.class,
-                NetworkSyncChunk::encode, NetworkSyncChunk::decode, NetworkSyncChunk::handle,
-                Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+    public static ResourceLocation id(String path) {
+        return ResourceLocation.fromNamespaceAndPath(MTRSurveyor.MOD_ID, path);
     }
 }

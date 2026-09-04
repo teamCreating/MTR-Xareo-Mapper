@@ -3,13 +3,15 @@ package com.lx862.mtrsurveyor.network;
 import com.lx862.mtrsurveyor.MTRSurveyor;
 import com.lx862.mtrsurveyor.config.MTRSurveyorConfig;
 import com.lx862.mtrsurveyor.mapdata.MapDataCache;
+import com.lx862.mtrsurveyor.mixin.client.ClientCommonListenerAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
+import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.neoforged.neoforge.network.connection.ConnectionType;
 
 import java.io.IOException;
 import java.util.List;
@@ -21,9 +23,11 @@ import java.util.concurrent.ConcurrentHashMap;
  * server, reassembles chunked transfers and feeds {@link MapDataCache}.
  *
  * <p>Fully optional - when the server does not run this mod the client falls
- * back to MTR's own radius-limited client data.</p>
+ * back to MTR's own radius-limited client data. Requests are only sent over
+ * NeoForge connections; payloads are registered as optional so even a
+ * NeoForge server without this mod cannot break the client.</p>
  */
-@Mod.EventBusSubscriber(modid = MTRSurveyor.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
+@EventBusSubscriber(modid = MTRSurveyor.MOD_ID, value = Dist.CLIENT)
 public final class ClientNetworkSync {
 
     /** Retry a snapshot request this often until the server answers once. */
@@ -34,6 +38,7 @@ public final class ClientNetworkSync {
     private static final Map<Integer, TransferBuffer> transfers = new ConcurrentHashMap<>();
     private static long lastRequestMillis = 0;
     private static long lastSuccessfulSyncMillis = 0;
+    private static int SCREEN_TRACE_TIMER = 0;
     /** Flips to true when a server answered at least once; flips back on world change. */
     private static boolean serverHasSupport = false;
     /** Set when the connected server clearly has no support, to back off requests. */
@@ -54,18 +59,20 @@ public final class ClientNetworkSync {
             return;
         }
         try {
-            if (!MTRNetwork.CHANNEL.isRemotePresent(mc.getConnection().getConnection())) {
-                // Server does not run this mod - fall back to client-only data.
+            if (!(mc.getConnection() instanceof ClientCommonListenerAccessor accessor)
+                    || accessor.mtrsurveyor$getConnectionType() != ConnectionType.NEOFORGE) {
+                // Vanilla/Forge server - this mod cannot be installed there, so
+                // fall back to client-only data without poking the connection.
                 markServerUnsupported();
                 return;
             }
-            MTRNetwork.CHANNEL.sendToServer(new RequestNetworkSync());
+            net.neoforged.neoforge.network.PacketDistributor.sendToServer(RequestNetworkSync.INSTANCE);
             lastRequestMillis = System.currentTimeMillis();
             if (MTRSurveyorConfig.INSTANCE.debugLog.get()) {
                 MTRSurveyor.LOGGER.info("[MTRSurveyor] Requested full-network snapshot ({})", trigger);
             }
         } catch (Throwable e) {
-            // Channel not registered remotely - back off for a while.
+            // Payload rejected - back off for a while.
             MTRSurveyor.LOGGER.debug("[MTRSurveyor] Snapshot request failed (server lacks the mod?): {}", e.getMessage());
             markServerUnsupported();
         }
@@ -75,18 +82,18 @@ public final class ClientNetworkSync {
         // Ignore stale transfers.
         transfers.values().removeIf(t -> t.ageMillis() > 120_000);
 
-        final TransferBuffer buffer = transfers.computeIfAbsent(chunk.transferId, id -> new TransferBuffer());
+        final TransferBuffer buffer = transfers.computeIfAbsent(chunk.transferId(), id -> new TransferBuffer());
         if (buffer.done) {
             return;
         }
-        buffer.store(chunk.chunkIndex, chunk);
-        if (buffer.receivedCount < chunk.totalChunks) {
+        buffer.store(chunk.chunkIndex(), chunk);
+        if (buffer.receivedCount < chunk.totalChunks()) {
             return;
         }
 
         // All chunks present - reassemble.
         buffer.done = true;
-        transfers.remove(chunk.transferId);
+        transfers.remove(chunk.transferId());
         try {
             final byte[] payload = buffer.assemble();
             final List<MapDataCache.DimensionData> dimensions =
@@ -125,14 +132,19 @@ public final class ClientNetworkSync {
     // -----------------------------------------------------------------------------------------------------------------
 
     @SubscribeEvent
-    public static void onClientTick(TickEvent.ClientTickEvent event) {
-        if (event.phase != TickEvent.Phase.END) {
-            return;
-        }
+    public static void onClientTick(ClientTickEvent.Post event) {
         final Minecraft mc = Minecraft.getInstance();
         if (mc.getConnection() == null || mc.player == null) {
             return;
         }
+
+        // Diagnostics: periodic screen-state trace (debugLog only), useful for
+        // checking which GUI the map layer should render into.
+        if (MTRSurveyorConfig.INSTANCE.debugLog.get()
+                && (SCREEN_TRACE_TIMER++ % 60) == 0) {
+            MTRSurveyor.LOGGER.info("[MTRSurveyor] screen-trace: {}", mc.screen);
+        }
+
         if (!MTRSurveyorConfig.INSTANCE.networkSyncEnabled.get()) {
             return;
         }
@@ -195,15 +207,15 @@ public final class ClientNetworkSync {
         }
 
         byte[] assemble() {
-            final short total = chunks.values().iterator().next().totalChunks;
+            final short total = chunks.values().iterator().next().totalChunks();
             int size = 0;
             for (short i = 0; i < total; i++) {
-                size += chunks.get(i).data.length;
+                size += chunks.get(i).data().length;
             }
             final byte[] payload = new byte[size];
             int offset = 0;
             for (short i = 0; i < total; i++) {
-                final byte[] part = chunks.get(i).data;
+                final byte[] part = chunks.get(i).data();
                 System.arraycopy(part, 0, payload, offset, part.length);
                 offset += part.length;
             }

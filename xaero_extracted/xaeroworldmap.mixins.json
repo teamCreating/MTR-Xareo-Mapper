@@ -1,0 +1,28 @@
+{
+  "required": true,
+  "plugin" : "xaero.map.mixin.plugin.MixinPlugin",
+  "minVersion": "0.8",
+  "package": "xaero.map.mixin",
+  "refmap": "xaeroworldmap.refmap.json",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "MixinMinecraftServer",
+    "MixinPlayerList",
+    "MixinServerPlayer"
+  ],
+  "client": [
+    "MixinChatListener",
+    "MixinChunkDeltaUpdateS2CPacketAccessor",
+    "MixinClientPlayNetworkHandler",
+    "MixinClientWorld",
+    "MixinLevelStorageAccess",
+    "MixinMinecraftClient",
+    "MixinServerWorld",
+    "MixinWorldChunk"
+  ],
+  "server": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

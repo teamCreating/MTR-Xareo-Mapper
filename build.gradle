@@ -1,64 +1,42 @@
-buildscript {
-    repositories {
-        maven { url = 'https://maven.minecraftforge.net' }
-        maven { url = 'https://repo.spongepowered.org/repository/maven-public/' }
-        mavenCentral()
-    }
-    dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '6.0.+'
-        classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
-    }
+plugins {
+    id 'net.neoforged.moddev' version '2.0.146'
 }
-
-apply plugin: 'net.minecraftforge.gradle'
-apply plugin: 'org.spongepowered.mixin'
-apply plugin: 'maven-publish'
 
 version = project.mod_version
 group = project.maven_group
-archivesBaseName = project.archives_base_name
+base {
+    archivesName = project.archives_base_name
+}
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 
-minecraft {
-    mappings channel: 'official', version: project.minecraft_version
+neoForge {
+    version = project.neoforge_version
 
     runs {
         client {
-            workingDirectory project.file('run')
-            property 'forge.logging.markers', 'REGISTRIES'
-            property 'forge.logging.console.level', 'debug'
-            property 'mixin.env.remapRefMap', 'true'
-            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
-            
-            mods {
-                mtrsurveyor {
-                    source sourceSets.main
-                }
+            client()
+            gameDirectory = file('run')
+            // ./gradlew runClient -Pquickplay=TestWorld launches straight into a world
+            if (project.hasProperty('quickplay')) {
+                programArguments.addAll('--quickPlaySingleplayer', project.property('quickplay').toString())
             }
         }
-
         server {
-            workingDirectory project.file('run')
-            property 'forge.logging.markers', 'REGISTRIES'
-            property 'forge.logging.console.level', 'debug'
-
-            mods {
-                mtrsurveyor {
-                    source sourceSets.main
-                }
-            }
+            server()
+            gameDirectory = file('run-server')
         }
     }
-}
 
-mixin {
-    add sourceSets.main, "mtrsurveyor.refmap.json"
-    config "mtrsurveyor.mixins.json"
+    mods {
+        mtrsurveyor {
+            sourceSet sourceSets.main
+        }
+    }
 }
 
 repositories {
@@ -76,14 +54,10 @@ repositories {
 }
 
 dependencies {
-    minecraft "net.minecraftforge:forge:${project.minecraft_version}-${project.forge_version}"
-    
-    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
-
-    // MTR Mod (Forge 1.20.1) - compileOnly since MTR bundles its own core classes
+    // MTR 4.1.0-beta (NeoForge 1.21.1) - compileOnly: MTR ships its own shaded core
     compileOnly "maven.modrinth:minecraft-transit-railway:${project.mtr_modrinth_version}"
-    
-    // Xaero's Minimap (contains waypoint classes)
+
+    // Xaero's Minimap (waypoint sync)
     compileOnly "maven.modrinth:xaeros-minimap:${project.xaero_minimap_modrinth_version}"
 
     // Xaero's World Map (path layer render hook)
@@ -95,7 +69,7 @@ processResources {
     inputs.property "minecraft_version", project.minecraft_version
     inputs.property "mtr_version", project.mtr_version
 
-    filesMatching("META-INF/mods.toml") {
+    filesMatching("META-INF/neoforge.mods.toml") {
         expand "version": project.version,
                 "minecraft_version": project.minecraft_version,
                 "mtr_version": project.mtr_version
@@ -114,18 +88,5 @@ jar {
             "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
             "MixinConfigs": "mtrsurveyor.mixins.json"
         ])
-    }
-}
-
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            artifact jar
-        }
-    }
-    repositories {
-        maven {
-            url "file:///${project.projectDir}/mcmodsrepo"
-        }
     }
 }

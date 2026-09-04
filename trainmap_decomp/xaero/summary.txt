@@ -1,0 +1,2 @@
+Summary for C:\Users\ben_l\.gradle\caches\modules-2\files-2.1\maven.modrinth\xaeros-world-map\forge-1.20.1-1.40.11\a5d068b6aa72c69b79e7ab7da47ef64f96e5b7c\xaeros-world-map-forge-1.20.1-1.40.11.jar
+Decompiled with CFR 0.152

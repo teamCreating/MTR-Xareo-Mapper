@@ -7,7 +7,7 @@ import com.lx862.mtrsurveyor.wrapper.MTRRoutePlatform;
 import com.lx862.mtrsurveyor.wrapper.impl.MTRSimplifiedRouteImpl;
 import it.unimi.dsi.fastutil.longs.Long2ObjectArrayMap;
 import org.mtr.core.data.*;
-import org.mtr.mod.client.MinecraftClientData;
+import org.mtr.client.MinecraftClientData;
 
 import java.util.ArrayList;
 import java.util.List;

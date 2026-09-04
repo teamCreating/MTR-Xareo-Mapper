@@ -1,11 +1,10 @@
 package com.lx862.mtrsurveyor.mixin;
 
 import org.mtr.core.Main;
-import org.mtr.mod.Init;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-@Mixin(value = Init.class, remap = false)
+@Mixin(value = org.mtr.MTR.class, remap = false)
 public interface MTRAccessorMixin {
     @Accessor("main")
     static Main getMain() {
