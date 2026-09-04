@@ -7,7 +7,7 @@ issueTrackerURL="https://github.com/BenLi06/mtrsurveyor/issues"
 modId="mtrsurveyor"
 version="${version}"
 displayName="[CRTools]MTR:Xaero Mapper"
-description='''Automatically syncs MTR Stations & Depots as waypoints to Xaero's World Map / Minimap. Supports station and platform display modes.'''
+description='''Automatically syncs MTR Stations, Platforms & Depots as waypoints to Xaero's Minimap / World Map. Supports station and platform display modes.'''
 logoFile="assets/mtrsurveyor/icon.png"
 authors="BenLi06"
 
@@ -34,13 +34,6 @@ side="BOTH"
 
 [[dependencies.mtrsurveyor]]
 modId="xaerominimap"
-mandatory=false
-versionRange="*"
-ordering="AFTER"
-side="CLIENT"
-
-[[dependencies.mtrsurveyor]]
-modId="xaeroworldmap"
 mandatory=false
 versionRange="*"
 ordering="AFTER"
