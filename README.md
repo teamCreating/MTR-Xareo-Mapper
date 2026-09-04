@@ -1,6 +1,6 @@
 # [CRTools] MTR:Xaero Mapper
 
-A Minecraft Forge 1.20.1 mod that automatically syncs [Minecraft Transit Railway (MTR)](https://github.com/Minecraft-Transit-Railway/Minecraft-Transit-Railway) stations and depots as waypoints to [Xaero's World Map](https://modrinth.com/mod/xaeros-world-map) / [Xaero's Minimap](https://modrinth.com/mod/xaeros-minimap).
+A Minecraft Forge 1.20.1 mod that displays [Minecraft Transit Railway (MTR)](https://github.com/Minecraft-Transit-Railway/Minecraft-Transit-Railway) networks on [Xaero's World Map](https://modrinth.com/mod/xaeros-world-map) - Create-train-map style - and syncs stations and depots as waypoints to [Xaero's Minimap](https://modrinth.com/mod/xaeros-minimap).
 
 ## Features
 
@@ -14,9 +14,13 @@ A Minecraft Forge 1.20.1 mod that automatically syncs [Minecraft Transit Railway
   - Hover tooltips for stops (station name → destination) and route names
   - ROUTES / TRACKS toggle widgets in the top-left corner of the map (persisted in config)
   - Dimension-aware: only draws when the map view matches the data's dimension
-  - Client-mode limitation: MTR only syncs data within render distance of the player, so the client-only
-    source covers the area around you; install this mod on the server for full-network coverage
-- **Client-Side Commands** — Works on remote servers without server-side installation
+- **Full-Network Sync** (install this mod on the server to unlock):
+  - The server streams a snapshot of the whole MTR network (routes + sampled track geometry) per dimension
+  - Path layer covers the entire network at any zoom, like Create's train map - not just the area around you
+  - Snapshot refreshes automatically and can be forced with a command
+  - Snapshot collection runs on MTR's simulator threads and is chunked in transit, safe for big networks
+- **Client-Only Fallback** — without server installation, the path layer still renders whatever MTR synced to
+  the client (within render distance of the player)
 
 ## Requirements
 
@@ -25,7 +29,8 @@ A Minecraft Forge 1.20.1 mod that automatically syncs [Minecraft Transit Railway
 | Minecraft Forge 1.20.1 | ✅ |
 | Minecraft Transit Railway 4.x | ✅ |
 | Xaero's Minimap | ⚠️ Optional (enables waypoint sync) |
-| Xaero's World Map | ⚠️ Optional (recommended for best experience) |
+| Xaero's World Map | ⚠️ Optional (recommended, enables the path layer; 1.40.11+) |
+| This mod on the server | ⚠️ Optional (enables full-network view) |
 
 ## Commands
 
@@ -34,37 +39,46 @@ All commands are client-side and work on any server:
 | Command | Description |
 |---------|-------------|
 | `/mtrsurveyor syncWaypoints` | Force a waypoint sync |
+| `/mtrsurveyor syncRoutes` | Request a full-network snapshot from the server |
 | `/mtrsurveyor mode` | Show current display mode |
 | `/mtrsurveyor mode station` | Switch to station mode (one waypoint per station) |
 | `/mtrsurveyor mode platform` | Switch to platform mode (one waypoint per platform) |
 | `/mtrsurveyor config enabled <true/false>` | Enable/disable auto-sync |
 | `/mtrsurveyor config showStations <true/false>` | Show/hide station waypoints |
 | `/mtrsurveyor config showDepots <true/false>` | Show/hide depot waypoints |
+| `/mtrsurveyor config routeLines <true/false>` | Show/hide route lines on the world map |
+| `/mtrsurveyor config trackLines <true/false>` | Show/hide the track layer on the world map |
 
 ## Configuration
 
 The config file is located at `.minecraft/config/mtrsurveyor.toml`.
 
 Key options:
-- `enabled` — Master switch for waypoint sync (default: `true`)
+- `enabled` — Master switch (default: `true`)
 - `waypointMode` — Display mode: `"station"` or `"platform"` (default: `"station"`)
+- `routeLinesEnabled` — Draw route lines on the world map (default: `true`)
+- `trackLinesEnabled` — Draw the track layer on the world map (default: `true`)
+- `networkSync.enabled` — Request full-network snapshots from modded servers (default: `true`)
+- `networkSync.refreshIntervalSeconds` — Snapshot refresh interval (default: `300`)
 - `showStationLandmarks` — Show station waypoints (default: `true`)
 - `showDepotLandmarks` — Show depot waypoints (default: `false`)
 - `showEmptyStation` — Show stations with no routes (default: `false`)
 - `debugLog` — Enable detailed sync logging (default: `false`)
 
-## Display Modes
+## How the path layer works
 
-### Station Mode (default)
-- One waypoint per MTR station
-- Icon shows full station name
-- Waypoint placed at average platform height
+Rendering hooks into `xaero.map.gui.GuiMap` (Xaero's World Map is closed-source with no overlay API,
+the same approach Create itself uses). World coordinates are transformed with the map camera/scale so
+geometry follows panning and zooming. Dimension ids use MTR's `namespace/path` world-id format.
 
-### Platform Mode
-- One waypoint per platform in each station
-- Icon shows platform name/number
-- Hover text shows: `[MTR] StationName | RouteName→Destination`
-- Waypoint placed at exact platform position
+Data resolution per dimension, in order of preference:
+1. **Server snapshot** (mod installed on the server) - the whole network, collected from MTR's
+   authoritative simulators and streamed to the client in chunks.
+2. **MTR client data** (client-only) - MTR only syncs stations/routes/rails within render distance of
+   the player, so this covers the explored area only.
+
+Check the log line `Path layer render hook into Xaero's World Map is active` to confirm the mixin
+applied; a `Xaero's World Map` update that moves internals will silently disable the layer (logged).
 
 ## License
 
