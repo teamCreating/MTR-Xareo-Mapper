@@ -2,10 +2,14 @@ package com.lx862.mtrsurveyor.mapdata;
 
 import com.lx862.mtrsurveyor.MTRSurveyor;
 import org.mtr.core.data.Position;
+import org.mtr.core.data.Rail;
+import org.mtr.core.data.RailMath;
 import org.mtr.core.data.SimplifiedRoute;
 import org.mtr.core.data.SimplifiedRoutePlatform;
 import org.mtr.core.data.Platform;
 import org.mtr.core.data.Route;
+import org.mtr.core.data.TransportMode;
+import org.mtr.core.tool.Vector;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import org.mtr.mod.client.MinecraftClientData;
 
@@ -55,7 +59,8 @@ public class MapDataCache {
     /** Bumped whenever MTR pushes new client data, invalidates the client-side cache. */
     private static volatile long clientDataVersion = 0;
     private static volatile DimensionData clientDataBuilt = null;
-    private static volatile long clientDataBuiltVersion = -1;
+    /** World-block distance between samples along a rail curve. */
+    private static final double TRACK_SAMPLE_INTERVAL = 8.0;
 
     public static void onClientDataSynced() {
         clientDataVersion++;
@@ -110,7 +115,6 @@ public class MapDataCache {
         }
         data = buildClientData(version);
         clientDataBuilt = data;
-        clientDataBuiltVersion = version;
         return data;
     }
 
@@ -128,6 +132,7 @@ public class MapDataCache {
                 if (instance != null) {
                     allPlatforms.putAll(instance.platformIdMap);
                     allRoutes.addAll(instance.simplifiedRoutes);
+                    collectClientTracks(instance, tracks);
                 }
                 final MinecraftClientData dashboard = MinecraftClientData.getDashboardInstance();
                 if (dashboard != null) {
@@ -173,5 +178,40 @@ public class MapDataCache {
         }
 
         return new DimensionData(routes, tracks, version);
+    }
+
+    /**
+     * Sample the actual rail geometry from MTR's client-side rail set into
+     * polylines. Rails follow real curves (arcs, slopes), so each rail is
+     * sampled along its length via {@link RailMath#getPosition(double, boolean)}.
+     *
+     * <p>Note: MTR only syncs rails within render distance of the player, so
+     * this client-side source covers the explored area only; server-synced
+     * data (when available) replaces it with the full network.</p>
+     */
+    private static void collectClientTracks(MinecraftClientData instance, List<MapTrack> tracks) {
+        for (Rail rail : instance.rails) {
+            try {
+                if (rail.getTransportMode() != TransportMode.TRAIN || !rail.isValid()) {
+                    continue;
+                }
+                final RailMath railMath = rail.railMath;
+                final double length = railMath.getLength();
+                if (length <= 0 || Double.isNaN(length)) {
+                    continue;
+                }
+
+                final int sampleCount = (int) Math.min(256, Math.max(2, Math.ceil(length / TRACK_SAMPLE_INTERVAL) + 1));
+                final ArrayList<double[]> points = new ArrayList<>(sampleCount);
+                for (int i = 0; i < sampleCount; i++) {
+                    final double distance = Math.min(length, i * (length / (sampleCount - 1)));
+                    final Vector pos = railMath.getPosition(distance, false);
+                    points.add(new double[]{pos.x, pos.z});
+                }
+                tracks.add(new MapTrack(points));
+            } catch (Throwable e) {
+                MTRSurveyor.LOGGER.debug("[MTRSurveyor] Failed to sample rail for track layer: {}", e.getMessage());
+            }
+        }
     }
 }

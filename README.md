@@ -10,9 +10,12 @@ A Minecraft Forge 1.20.1 mod that automatically syncs [Minecraft Transit Railway
 - **Correct Altitude** — Waypoints are placed at actual platform level, not underground
 - **Map Path Layer** — MTR route lines are drawn directly on Xaero's World Map, Create-train-map style:
   - Colored polylines following each route's stop order (circular routes are closed)
+  - Track layer: actual rail geometry (arcs & slopes) sampled along each rail, drawn as a dark underlay
   - Hover tooltips for stops (station name → destination) and route names
   - ROUTES / TRACKS toggle widgets in the top-left corner of the map (persisted in config)
   - Dimension-aware: only draws when the map view matches the data's dimension
+  - Client-mode limitation: MTR only syncs data within render distance of the player, so the client-only
+    source covers the area around you; install this mod on the server for full-network coverage
 - **Client-Side Commands** — Works on remote servers without server-side installation
 
 ## Requirements
