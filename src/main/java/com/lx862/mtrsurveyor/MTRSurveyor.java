@@ -2,6 +2,7 @@ package com.lx862.mtrsurveyor;
 
 import com.lx862.mtrsurveyor.config.MTRSurveyorConfig;
 import com.lx862.mtrsurveyor.integration.XaeroIntegration;
+import com.lx862.mtrsurveyor.network.MTRNetwork;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.client.event.RegisterClientCommandsEvent;
@@ -34,6 +35,10 @@ public class MTRSurveyor {
     }
 
     private void setup(final FMLCommonSetupEvent event) {
+        // Register the full-network sync channel (used when this mod is also on
+        // the server; harmless when not).
+        event.enqueueWork(MTRNetwork::register);
+
         if (MTRSurveyorConfig.INSTANCE.formalInitLog.get()) {
             LOGGER.info("[{}] Mod loaded!", MOD_NAME);
         } else {
@@ -74,6 +79,7 @@ public class MTRSurveyor {
             return;
 
         XaeroIntegration.onClientTick();
+        // ClientNetworkSync ticks itself via its own @SubscribeEvent handlers.
     }
 
     public static MinecraftServer getServerInstance() {

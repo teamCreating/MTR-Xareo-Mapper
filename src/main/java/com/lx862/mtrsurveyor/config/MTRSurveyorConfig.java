@@ -22,6 +22,10 @@ public class MTRSurveyorConfig {
         public final ForgeConfigSpec.BooleanValue routeLinesEnabled;
         public final ForgeConfigSpec.BooleanValue trackLinesEnabled;
 
+        // Full-network sync (requires the mod on the server)
+        public final ForgeConfigSpec.BooleanValue networkSyncEnabled;
+        public final ForgeConfigSpec.IntValue networkSyncIntervalSeconds;
+
         // Visibility
         public final ForgeConfigSpec.BooleanValue showStationLandmarks;
         public final ForgeConfigSpec.BooleanValue showDepotLandmarks;
@@ -60,6 +64,14 @@ public class MTRSurveyorConfig {
                 trackLinesEnabled = builder
                                 .comment("Whether the MTR track layer (actual rail geometry) should be drawn on the Xaero's World Map")
                                 .define("trackLinesEnabled", true);
+
+                networkSyncEnabled = builder
+                                .comment("Request full-network snapshots from servers that also run this mod (Create-train-map-style whole-network view). Client-only servers fall back to radius-limited MTR data automatically")
+                                .define("networkSync.enabled", true);
+
+                networkSyncIntervalSeconds = builder
+                                .comment("How often (in seconds) to refresh the full-network snapshot while playing")
+                                .defineInRange("networkSync.refreshIntervalSeconds", 300, 30, 3600);
 
                 builder.push("visibility");
 

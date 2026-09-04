@@ -3,13 +3,10 @@ package com.lx862.mtrsurveyor.mapdata;
 import com.lx862.mtrsurveyor.MTRSurveyor;
 import org.mtr.core.data.Position;
 import org.mtr.core.data.Rail;
-import org.mtr.core.data.RailMath;
 import org.mtr.core.data.SimplifiedRoute;
 import org.mtr.core.data.SimplifiedRoutePlatform;
 import org.mtr.core.data.Platform;
 import org.mtr.core.data.Route;
-import org.mtr.core.data.TransportMode;
-import org.mtr.core.tool.Vector;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import org.mtr.mod.client.MinecraftClientData;
 
@@ -37,12 +34,14 @@ public class MapDataCache {
     /** Simple per-dimension bundle of render-ready data. */
     public static class DimensionData {
 
+        public final String dimensionId;
         public final List<MapRoute> routes;
         public final List<MapTrack> tracks;
         /** Monotonic version counter, used to decide when to rebuild GPU-side caches. */
         public final long version;
 
-        public DimensionData(List<MapRoute> routes, List<MapTrack> tracks, long version) {
+        public DimensionData(String dimensionId, List<MapRoute> routes, List<MapTrack> tracks, long version) {
+            this.dimensionId = dimensionId;
             this.routes = routes;
             this.tracks = tracks;
             this.version = version;
@@ -53,14 +52,12 @@ public class MapDataCache {
         }
     }
 
-    private static final DimensionData EMPTY = new DimensionData(List.of(), List.of(), 0);
+    private static final DimensionData EMPTY = new DimensionData("", List.of(), List.of(), 0);
 
     private static final Object2ObjectOpenHashMap<String, DimensionData> SERVER_DATA = new Object2ObjectOpenHashMap<>();
     /** Bumped whenever MTR pushes new client data, invalidates the client-side cache. */
     private static volatile long clientDataVersion = 0;
     private static volatile DimensionData clientDataBuilt = null;
-    /** World-block distance between samples along a rail curve. */
-    private static final double TRACK_SAMPLE_INTERVAL = 8.0;
 
     public static void onClientDataSynced() {
         clientDataVersion++;
@@ -177,7 +174,7 @@ public class MapDataCache {
             MTRSurveyor.LOGGER.debug("[MTRSurveyor] Error building client map data: {}", e.getMessage());
         }
 
-        return new DimensionData(routes, tracks, version);
+        return new DimensionData("", routes, tracks, version);
     }
 
     /**
@@ -191,26 +188,9 @@ public class MapDataCache {
      */
     private static void collectClientTracks(MinecraftClientData instance, List<MapTrack> tracks) {
         for (Rail rail : instance.rails) {
-            try {
-                if (rail.getTransportMode() != TransportMode.TRAIN || !rail.isValid()) {
-                    continue;
-                }
-                final RailMath railMath = rail.railMath;
-                final double length = railMath.getLength();
-                if (length <= 0 || Double.isNaN(length)) {
-                    continue;
-                }
-
-                final int sampleCount = (int) Math.min(256, Math.max(2, Math.ceil(length / TRACK_SAMPLE_INTERVAL) + 1));
-                final ArrayList<double[]> points = new ArrayList<>(sampleCount);
-                for (int i = 0; i < sampleCount; i++) {
-                    final double distance = Math.min(length, i * (length / (sampleCount - 1)));
-                    final Vector pos = railMath.getPosition(distance, false);
-                    points.add(new double[]{pos.x, pos.z});
-                }
+            final List<double[]> points = TrackSampler.sample(rail);
+            if (points != null) {
                 tracks.add(new MapTrack(points));
-            } catch (Throwable e) {
-                MTRSurveyor.LOGGER.debug("[MTRSurveyor] Failed to sample rail for track layer: {}", e.getMessage());
             }
         }
     }

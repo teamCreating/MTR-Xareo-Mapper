@@ -105,7 +105,14 @@ public class XaeroRouteRenderer {
 
         // MTR client data belongs to the player's dimension. Without server-synced
         // data we can only draw the dimension the player is actually in.
-        final String dimensionKey = viewedDimension == null ? null : viewedDimension.location().toString();
+        // Key format matches MTR's world ids ("minecraft/overworld", slash not colon).
+        final String dimensionKey;
+        if (viewedDimension == null) {
+            dimensionKey = null;
+        } else {
+            final net.minecraft.resources.ResourceLocation dimLocation = viewedDimension.location();
+            dimensionKey = dimLocation.getNamespace() + "/" + dimLocation.getPath();
+        }
         final boolean playerDimension = mc.level != null && viewedDimension == mc.level.dimension();
         if (dimensionKey == null || (!playerDimension && !MapDataCache.hasServerData(dimensionKey))) {
             renderToggleWidgets(graphics, mc.font, mouseX, mouseY);

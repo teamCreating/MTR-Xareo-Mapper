@@ -2,6 +2,7 @@ package com.lx862.mtrsurveyor;
 
 import com.lx862.mtrsurveyor.config.MTRSurveyorConfig;
 import com.lx862.mtrsurveyor.integration.XaeroIntegration;
+import com.lx862.mtrsurveyor.network.ClientNetworkSync;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
@@ -71,6 +72,18 @@ public class CommandRegistration {
                         return 1;
                 });
 
+                // /mtrsurveyor syncRoutes - request a full-network snapshot from the server
+                LiteralArgumentBuilder<CommandSourceStack> syncRoutesNode = Commands.literal("syncRoutes");
+                syncRoutesNode.executes(ctx -> {
+                        ClientNetworkSync.requestSync("manual /mtrsurveyor syncRoutes");
+                        ctx.getSource().sendSuccess(
+                                        () -> Component.literal(
+                                                        "Full-network snapshot requested! (If the server also runs this mod, the whole network will appear shortly.)")
+                                                                        .withStyle(ChatFormatting.GREEN),
+                                                        true);
+                        return 1;
+                });
+
                 // Config sub-commands
                 LiteralArgumentBuilder<CommandSourceStack> configNode = Commands.literal("config");
                 configNode.then(createBoolConfigNode("enabled", "Waypoint sync",
@@ -91,6 +104,7 @@ public class CommandRegistration {
 
                 rootNode.then(forceSyncNode);
                 rootNode.then(modeNode);
+                rootNode.then(syncRoutesNode);
                 rootNode.then(configNode);
                 dispatcher.register(rootNode);
         }
