@@ -123,3 +123,11 @@ run/
 run-server/
 run_client_test*.log
 run_server_test.log
+
+# Local reference / scratch material (not part of the build)
+/CreateMod
+/trainmap_decomp
+/xaero_extracted
+/GuiMap*.java
+/InspectMTR.java
+/build_log.txt
