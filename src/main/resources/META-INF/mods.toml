@@ -6,7 +6,7 @@ license="MIT"
 modId="${mod_id}"
 version="${version}"
 displayName="${mod_name}"
-description='''Display MTR stations and depots as landmarks on JourneyMap.'''
+description='''Display MTR stations, platforms and depots as markers on JourneyMap. Supports station and platform display modes.'''
 logoFile="assets/mtrjourneymap/icon.png"
 
 [[dependencies.${mod_id}]]

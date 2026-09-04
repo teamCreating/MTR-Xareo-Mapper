@@ -17,6 +17,15 @@ public class MTRSurveyorConfig {
     public boolean formalInitLog = false;
     public boolean debugLog = false;
     public boolean enabled = true;
+
+    /**
+     * Marker display mode: "station" shows one marker per station,
+     * "platform" shows one marker per platform (with route info).
+     */
+    public String waypointMode = MODE_STATION;
+    public static final String MODE_STATION = "station";
+    public static final String MODE_PLATFORM = "platform";
+
     public Visibility visibility = new Visibility();
 
     public static class Visibility {

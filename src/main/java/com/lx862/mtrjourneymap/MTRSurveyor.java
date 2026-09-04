@@ -2,11 +2,9 @@ package com.lx862.mtrjourneymap;
 
 import com.lx862.mtrjourneymap.config.MTRSurveyorConfig;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.MinecraftServer;
+import net.minecraftforge.client.event.RegisterClientCommandsEvent;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.RegisterCommandsEvent;
-import net.minecraftforge.event.server.ServerStartingEvent;
-import net.minecraftforge.event.server.ServerStoppedEvent;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import org.slf4j.Logger;
@@ -18,7 +16,6 @@ public class MTRSurveyor {
     public static final String MOD_ID = "mtrjourneymap";
     public static final String MOD_NAME = "MTR JourneyMap Integration";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_NAME);
-    private static MinecraftServer serverInstance = null;
 
     public MTRSurveyor() {
         MTRSurveyorConfig.init();
@@ -32,23 +29,21 @@ public class MTRSurveyor {
         MinecraftForge.EVENT_BUS.register(this);
     }
 
+    /**
+     * Register client-side commands. This fires on the client and works
+     * even when connected to a remote server that doesn't have this mod.
+     */
     @SubscribeEvent
-    public void onServerStarting(ServerStartingEvent event) {
-        serverInstance = event.getServer();
+    public void onRegisterClientCommands(RegisterClientCommandsEvent event) {
+        CommandRegistration.register(event.getDispatcher());
     }
 
     @SubscribeEvent
-    public void onServerStopped(ServerStoppedEvent event) {
-        serverInstance = null;
-    }
+    public void onClientTick(TickEvent.ClientTickEvent event) {
+        if (event.phase != TickEvent.Phase.END)
+            return;
 
-    @SubscribeEvent
-    public void onRegisterCommands(RegisterCommandsEvent event) {
-        Commands.register(event.getDispatcher());
-    }
-
-    public static MinecraftServer getServerInstance() {
-        return serverInstance;
+        ClientSyncHandler.onClientTick();
     }
 
     public static ResourceLocation id(String path) {
