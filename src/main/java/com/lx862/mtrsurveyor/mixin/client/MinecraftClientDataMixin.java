@@ -3,6 +3,7 @@ package com.lx862.mtrsurveyor.mixin.client;
 import com.lx862.mtrsurveyor.MTRSurveyor;
 import com.lx862.mtrsurveyor.config.MTRSurveyorConfig;
 import com.lx862.mtrsurveyor.integration.XaeroIntegration;
+import com.lx862.mtrsurveyor.mapdata.MapDataCache;
 import org.mtr.mod.client.MinecraftClientData;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -17,5 +18,7 @@ public class MinecraftClientDataMixin {
             MTRSurveyor.LOGGER.debug("[MTRSurveyor] MTR client data synced, requesting waypoint sync");
             XaeroIntegration.requestSync();
         }
+        // Invalidate the path-layer cache built from MTR client data
+        MapDataCache.onClientDataSynced();
     }
 }

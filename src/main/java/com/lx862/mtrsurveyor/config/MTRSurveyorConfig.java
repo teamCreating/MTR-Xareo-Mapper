@@ -18,6 +18,10 @@ public class MTRSurveyorConfig {
         // Waypoint mode: "station" or "platform"
         public final ForgeConfigSpec.ConfigValue<String> waypointMode;
 
+        // World map path layers
+        public final ForgeConfigSpec.BooleanValue routeLinesEnabled;
+        public final ForgeConfigSpec.BooleanValue trackLinesEnabled;
+
         // Visibility
         public final ForgeConfigSpec.BooleanValue showStationLandmarks;
         public final ForgeConfigSpec.BooleanValue showDepotLandmarks;
@@ -48,6 +52,14 @@ public class MTRSurveyorConfig {
                 waypointMode = builder
                                 .comment("Waypoint display mode: 'station' shows one waypoint per station, 'platform' shows one waypoint per platform with route info")
                                 .define("waypointMode", "station");
+
+                routeLinesEnabled = builder
+                                .comment("Whether MTR route lines should be drawn on the Xaero's World Map")
+                                .define("routeLinesEnabled", true);
+
+                trackLinesEnabled = builder
+                                .comment("Whether the MTR track layer (actual rail geometry) should be drawn on the Xaero's World Map")
+                                .define("trackLinesEnabled", true);
 
                 builder.push("visibility");
 

@@ -1,0 +1,177 @@
+package com.lx862.mtrsurveyor.mapdata;
+
+import com.lx862.mtrsurveyor.MTRSurveyor;
+import org.mtr.core.data.Position;
+import org.mtr.core.data.SimplifiedRoute;
+import org.mtr.core.data.SimplifiedRoutePlatform;
+import org.mtr.core.data.Platform;
+import org.mtr.core.data.Route;
+import org.mtr.libraries.it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import org.mtr.mod.client.MinecraftClientData;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Central access point for map path-layer data, keyed by dimension id
+ * (e.g. "minecraft:overworld").
+ *
+ * <p>Resolution order per dimension:</p>
+ * <ol>
+ *   <li>Server-synced full-network data ({@code SERVER_DATA}, filled by the
+ *       Plan-C network sync when the server runs this mod) - covers the whole
+ *       network, Create-style.</li>
+ *   <li>Fallback: whatever MTR has synced to the client
+ *       ({@link MinecraftClientData}), which is limited to the area around
+ *       the player (MTR only syncs data within render distance).</li>
+ * </ol>
+ */
+public class MapDataCache {
+
+    /** Simple per-dimension bundle of render-ready data. */
+    public static class DimensionData {
+
+        public final List<MapRoute> routes;
+        public final List<MapTrack> tracks;
+        /** Monotonic version counter, used to decide when to rebuild GPU-side caches. */
+        public final long version;
+
+        public DimensionData(List<MapRoute> routes, List<MapTrack> tracks, long version) {
+            this.routes = routes;
+            this.tracks = tracks;
+            this.version = version;
+        }
+
+        public boolean isEmpty() {
+            return routes.isEmpty() && tracks.isEmpty();
+        }
+    }
+
+    private static final DimensionData EMPTY = new DimensionData(List.of(), List.of(), 0);
+
+    private static final Object2ObjectOpenHashMap<String, DimensionData> SERVER_DATA = new Object2ObjectOpenHashMap<>();
+    /** Bumped whenever MTR pushes new client data, invalidates the client-side cache. */
+    private static volatile long clientDataVersion = 0;
+    private static volatile DimensionData clientDataBuilt = null;
+    private static volatile long clientDataBuiltVersion = -1;
+
+    public static void onClientDataSynced() {
+        clientDataVersion++;
+    }
+
+    /**
+     * Store a full-network snapshot received from the (modded) server.
+     * Called on the network thread; volatile-safe swap into the map.
+     */
+    public static void putServerData(String dimension, DimensionData data) {
+        synchronized (SERVER_DATA) {
+            SERVER_DATA.put(dimension, data);
+        }
+    }
+
+    public static void clearServerData() {
+        synchronized (SERVER_DATA) {
+            SERVER_DATA.clear();
+        }
+    }
+
+    public static boolean hasServerData(String dimension) {
+        synchronized (SERVER_DATA) {
+            return SERVER_DATA.containsKey(dimension);
+        }
+    }
+
+    /**
+     * Get render data for a dimension. Prefers server-synced full-network
+     * data; falls back to the radius-limited MTR client data.
+     */
+    public static DimensionData get(String dimension) {
+        synchronized (SERVER_DATA) {
+            final DimensionData serverData = SERVER_DATA.get(dimension);
+            if (serverData != null) {
+                return serverData;
+            }
+        }
+        return getClientData();
+    }
+
+    /**
+     * Build (with memoization) route/track data from MTR's client-side data.
+     * Note: MTR only syncs data within render distance of the player, so this
+     * fallback only covers the area around the player.
+     */
+    public static DimensionData getClientData() {
+        final long version = clientDataVersion;
+        DimensionData data = clientDataBuilt;
+        if (data != null && data.version == version) {
+            return data;
+        }
+        data = buildClientData(version);
+        clientDataBuilt = data;
+        clientDataBuiltVersion = version;
+        return data;
+    }
+
+    private static DimensionData buildClientData(long version) {
+        final List<MapRoute> routes = new ArrayList<>();
+        final List<MapTrack> tracks = new ArrayList<>();
+
+        try {
+            // Aggregate both the live streaming instance and the dashboard instance,
+            // mirroring how the waypoint sync collects its data.
+            final Map<Long, Platform> allPlatforms = new HashMap<>();
+            final List<SimplifiedRoute> allRoutes = new ArrayList<>();
+            try {
+                final MinecraftClientData instance = MinecraftClientData.getInstance();
+                if (instance != null) {
+                    allPlatforms.putAll(instance.platformIdMap);
+                    allRoutes.addAll(instance.simplifiedRoutes);
+                }
+                final MinecraftClientData dashboard = MinecraftClientData.getDashboardInstance();
+                if (dashboard != null) {
+                    allPlatforms.putAll(dashboard.platformIdMap);
+                    allRoutes.addAll(dashboard.simplifiedRoutes);
+                }
+            } catch (Throwable e) {
+                MTRSurveyor.LOGGER.error("[MTRSurveyor] Error accessing MTR client datasets", e);
+            }
+
+            for (SimplifiedRoute route : allRoutes) {
+                try {
+                    final List<SimplifiedRoutePlatform> routePlatforms = route.getPlatforms();
+                    if (routePlatforms == null || routePlatforms.size() < 2) {
+                        continue;
+                    }
+
+                    final List<MapRoute.Stop> stops = new ArrayList<>(routePlatforms.size());
+                    boolean allStopsResolved = true;
+                    for (SimplifiedRoutePlatform routePlatform : routePlatforms) {
+                        final Platform platform = allPlatforms.get(routePlatform.getPlatformId());
+                        if (platform == null) {
+                            allStopsResolved = false;
+                            break;
+                        }
+                        final Position pos = platform.getMidPosition();
+                        stops.add(new MapRoute.Stop(pos.getX(), pos.getZ(),
+                                routePlatform.getStationName(), routePlatform.getDestination()));
+                    }
+
+                    if (allStopsResolved) {
+                        final boolean circular = route.getCircularState() == Route.CircularState.CLOCKWISE
+                                || route.getCircularState() == Route.CircularState.ANTICLOCKWISE;
+                        routes.add(new MapRoute(route.getName(), route.getColor(), circular, stops));
+                    }
+                } catch (Throwable e) {
+                    MTRSurveyor.LOGGER.debug("[MTRSurveyor] Failed to build map data for route: {}", e.getMessage());
+                }
+            }
+        } catch (Throwable e) {
+            // Never let data collection break the map render
+            MTRSurveyor.LOGGER.debug("[MTRSurveyor] Error building client map data: {}", e.getMessage());
+        }
+
+        return new DimensionData(routes, tracks, version);
+    }
+}

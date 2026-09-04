@@ -85,6 +85,9 @@ dependencies {
     
     // Xaero's Minimap (contains waypoint classes)
     compileOnly "maven.modrinth:xaeros-minimap:${project.xaero_minimap_modrinth_version}"
+
+    // Xaero's World Map (path layer render hook)
+    compileOnly "maven.modrinth:xaeros-world-map:${project.xaero_world_map_modrinth_version}"
 }
 
 processResources {

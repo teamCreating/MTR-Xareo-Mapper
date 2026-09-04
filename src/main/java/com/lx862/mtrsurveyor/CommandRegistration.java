@@ -82,6 +82,12 @@ public class CommandRegistration {
                 configNode.then(createBoolConfigNode("showDepots", "Depot waypoints",
                                 () -> MTRSurveyorConfig.INSTANCE.showDepotLandmarks.get(),
                                 v -> MTRSurveyorConfig.INSTANCE.showDepotLandmarks.set(v)));
+                configNode.then(createBoolConfigNode("routeLines", "Map route lines",
+                                () -> MTRSurveyorConfig.INSTANCE.routeLinesEnabled.get(),
+                                v -> MTRSurveyorConfig.INSTANCE.routeLinesEnabled.set(v)));
+                configNode.then(createBoolConfigNode("trackLines", "Map track layer",
+                                () -> MTRSurveyorConfig.INSTANCE.trackLinesEnabled.get(),
+                                v -> MTRSurveyorConfig.INSTANCE.trackLinesEnabled.set(v)));
 
                 rootNode.then(forceSyncNode);
                 rootNode.then(modeNode);

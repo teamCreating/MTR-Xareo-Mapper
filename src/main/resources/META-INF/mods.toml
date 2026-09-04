@@ -39,5 +39,12 @@ versionRange="*"
 ordering="AFTER"
 side="CLIENT"
 
+[[dependencies.mtrsurveyor]]
+modId="xaeroworldmap"
+mandatory=false
+versionRange="[1.40.11,)"
+ordering="AFTER"
+side="CLIENT"
+
 [[mixins]]
 config="mtrsurveyor.mixins.json"

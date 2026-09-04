@@ -8,6 +8,11 @@ A Minecraft Forge 1.20.1 mod that automatically syncs [Minecraft Transit Railway
 - **Station Mode** — One waypoint per station, showing full station name
 - **Platform Mode** — One waypoint per platform, showing platform number with route and destination info on hover
 - **Correct Altitude** — Waypoints are placed at actual platform level, not underground
+- **Map Path Layer** — MTR route lines are drawn directly on Xaero's World Map, Create-train-map style:
+  - Colored polylines following each route's stop order (circular routes are closed)
+  - Hover tooltips for stops (station name → destination) and route names
+  - ROUTES / TRACKS toggle widgets in the top-left corner of the map (persisted in config)
+  - Dimension-aware: only draws when the map view matches the data's dimension
 - **Client-Side Commands** — Works on remote servers without server-side installation
 
 ## Requirements
