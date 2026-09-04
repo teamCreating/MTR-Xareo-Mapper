@@ -1,4 +1,13 @@
-# v1.0.0 Release Notes(更新于 2026-09-05)
+# v1.0.1 Release Notes(2026-09-05)
+
+## 下载说明
+
+本 Release 附带两个独立构建产物(均为客户端 mod,可单独安装,也可同时安装):
+
+| 文件 | 版本 | 说明 |
+|------|------|------|
+| `CRTools-MTR-Xaero-Mapper-1.0.1.jar` | Xaero 版(main 分支) | 将 MTR 车站 / 站台 / 车辆段同步为 Xaero's Minimap 航点 |
+| `mtrjourneymap-1.0.1.jar` | JourneyMap 版(journeymap 分支) | 将 MTR 车站 / 站台 / 车辆段显示为 JourneyMap marker |
 
 ## 本次更新内容
 
